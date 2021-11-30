@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:int="http://www.springframework.org/schema/integration"
+       xmlns:file="http://www.springframework.org/schema/integration/file"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/integration
+	http://www.springframework.org/schema/integration/spring-integration.xsd
+	http://www.springframework.org/schema/integration/file
+	http://www.springframework.org/schema/integration/file/spring-integration-file.xsd
+	http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans.xsd
+	http://www.springframework.org/schema/context
+    http://www.springframework.org/schema/context/spring-context.xsd">
+    <context:annotation-config/>
+
+    <bean id="baseDirectoryCross" class="java.lang.String">
+        <constructor-arg value="#{baseDirectory}/${tenantId}/recommendation-cross" />
+    </bean>
+
+    <!-- 1) Scan for files -->
+    <file:inbound-channel-adapter id="batchFilesCross" directory="#{baseDirectoryCross}"
+                                  filename-regex="^(.*)-(\d+)\.csv" comparator="fileOrderComparator">
+        <int:poller fixed-rate="1000" />
+    </file:inbound-channel-adapter>
+
+    <!-- 2) move the file to processing and setup header -->
+    <file:outbound-gateway request-channel="batchFilesCross" reply-channel="batchFilesCrossProc"
+                           directory="#{baseDirectoryCross}/processing" delete-source-files="true" />
+    <int:service-activator input-channel="batchFilesCrossProc" output-channel="batchFilesHeaderInit"
+                           ref="CrossHeaderSetupTask" method="execute" />
+    <bean id="CrossHeaderSetupTask" class="de.hybris.platform.acceleratorservices.dataimport.batch.task.HeaderSetupTask">
+        <property name="catalog" value="carnemartstoreProductCatalog" />
+        <property name="net" value="false" />
+        <property name="storeBaseDirectory" ref="baseDirectoryCross" />
+    </bean>
+
+    <!-- 3) Mapping and Converter -->
+    <bean id="CrossMapping" 
+          class="de.hybris.platform.acceleratorservices.dataimport.batch.converter.mapping.impl.DefaultConverterMapping"
+          p:mapping="cross"
+          p:converter-ref="CrossConverter"
+    />
+
+    <bean id="CrossConverter" class="de.hybris.platform.acceleratorservices.dataimport.batch.converter.impl.DefaultImpexConverter">
+        <property name="header">
+            <value>
+               # ImpEx for Importing Stock Levels into $CATALOG$
+                $productCatalog=$CATALOG$
+                $catalogVersion = catalogversion(catalog(id[default=$productCatalog]), version[default='Online'])[unique=true, default=$productCatalog:Online]
+                INSERT_UPDATE ProductReferenceCross;code[unique=true];reference[unique=true];isActive;store[unique=true]
+            </value>
+        </property>
+        <property name="impexRow">
+            <value>;{+1};{2};{3};{4}</value> 
+        </property>
+    </bean>
+
+</beans>
+

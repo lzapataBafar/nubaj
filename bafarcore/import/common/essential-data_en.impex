@@ -1,0 +1,189 @@
+# -----------------------------------------------------------------------
+# [y] hybris Platform
+#
+# Copyright (c) 2018 SAP SE or an SAP affiliate company.  All rights reserved.
+#
+# This software is the confidential and proprietary information of SAP
+# ("Confidential Information"). You shall not disclose such Confidential
+# Information and shall use it only in accordance with the terms of the
+# license agreement you entered into with SAP.
+# -----------------------------------------------------------------------
+#
+# Import essential data for the Accelerator
+#
+
+# Language
+$lang=en
+
+# Languages
+UPDATE Language;isocode[unique=true];name[lang=$lang]
+               ;en;"English"
+               ;es;"Spanish"
+               ;es_MX;"Spanish Mexico"
+
+
+# Currencies
+UPDATE Currency;isocode[unique=true];name[lang=$lang]
+               ;MXN;"MXN"
+
+# Titles
+UPDATE Title;code[unique=true];name[lang=$lang]
+            ;Sr.;"Mr"
+            ;Sra.;"Ms"
+            ;Srita.;"Miss"
+
+## Credit / Debit Cards
+#UPDATE CreditCardType;code[unique=true];name[lang=$lang]
+# ;amex;"American Express"
+# ;master;"Mastercard"
+# ;visa;"Visa"
+# ;spei;"Transferencia SPEI"
+
+# DistanceUnits for Storelocator 
+UPDATE DistanceUnit;code[unique=true];name[lang=$lang]
+                   ;km;"km"
+                   ;miles;"miles"
+
+# MediaFormats
+UPDATE MediaFormat;qualifier[unique=true];name[lang=$lang];
+                  ;1200Wx1200H;"1200Wx1200H"
+                  ;300Wx300H;"300Wx300H"
+                  ;30Wx30H;"30Wx30H"
+                  ;365Wx246H;"365Wx246H"
+                  ;515Wx515H;"515Wx515H"
+                  ;65Wx65H;"65Wx65H"
+                  ;96Wx96H;"96Wx96H"
+
+# Product Tax Groups
+UPDATE ProductTaxGroup;code[unique=true];name[lang=$lang]
+                      ;mx-iva-none;"Excento IVA"
+                      ;mx-iva-full;"IVA 16%"
+                      ;mx-ieps-01;"IEPS 1%"
+                      ;mx-ieps-03;"IEPS 3%"
+                      ;mx-ieps-10;"IEPS 10%"
+                      ;mx-ieps-21;"IEPS 21%"
+                      ;mx-ieps-04;"IEPS 4%"
+                      ;mx-ieps-23;"IEPS 23%"
+                      ;mx-ieps-120;"IEPS 120%"
+
+# User Tax Groups
+UPDATE UserTaxGroup;code[unique=true];name[lang=$lang]
+                   ;mx-taxes;"Taxes Mexico"
+
+# Tax
+UPDATE Tax;code[unique=true];name[lang=$lang]
+          ;mx-iva-none;"Excento IVA"
+          ;mx-iva-full;"IVA 16%"
+          ;mx-ieps-01;"IEPS 1%"
+          ;mx-ieps-03;"IEPS 3%"
+          ;mx-ieps-10;"IEPS 10%"
+          ;mx-ieps-21;"IEPS 21%"
+          ;mx-ieps-04;"IEPS 4%"
+          ;mx-ieps-23;"IEPS 23%"
+          ;mx-ieps-120;"IEPS 120%"
+
+# Consginment statuses
+UPDATE ConsignmentStatus;code[unique=true];name[lang=$lang]
+                        ;CANCELLED;"Cancelled"
+                        ;PICKPACK;"Pickpack"
+                        ;PICKUP_COMPLETE;"Pickup complete"
+                        ;READY;"Ready"
+                        ;READY_FOR_PICKUP;"Ready for pickup"
+                        ;SHIPPED;"Shipped"
+                        ;WAITING;"Waiting"
+
+
+UPDATE MetodoEntrega; code[unique=true];name;displayname[lang=$lang]
+                    ;01;Recoger en Tienda;Pick Up Store
+                    ;02;Entrega a Domicilio;Delivery
+
+UPDATE MetodoPago; code[unique=true];name;displayname[lang=$lang]
+                 ;01;Pago en Línea con Tarjeta de Crédito;Credit Card
+                 ;02;Pago en Línea con Tarjeta de Débito;Debit Card
+                 ;03;Pago con SPEI;SPEI Transfer
+                 ;04;Pago con Cheque;Check
+                 ;05;Crédito Carnemart;Carnemart Credit
+                 ;06;Crédito Vextor;Vextor Credit
+                 ;07;Pago en Efectivo;Cash
+                 ;08;Pago en Caja (Incluye Pago en Efectivo, Cheque, crédito, o TC/TD);Payment at Point of Service (Cash,Check, Credit, Cards)
+                 ;09;Pago en Reparto (Incluye Pago en Efectivo o TC/TD);Payment at Delivery (Cash,Cards)
+
+UPDATE CanalVenta; code[unique=true];name;displayname[lang=$lang]
+                 ;01;Canal ECO;Ecommerce
+                 ;02;Canal Venta Telefónica;Phone Sale
+                 ;03;Canal Venta en Campo;Field Sale
+
+UPDATE OrgVenta; code[unique=true];name;displayname[lang=$lang]
+               ;3100;BIF;BIF
+               ;3200;Carnemart;Carnemart
+               ;3600;La Pastora;La Pastora
+
+UPDATE UserRole; code[unique=true];name;displayname[lang=$lang]
+               ;10;Destintario de Factura;Invoice Recipient
+               ;39;Vendedor;Seller
+               ;1001;Cliente;Customer
+               ;1005;Destinatario de Mercancía;Merchandise Recipient
+
+UPDATE HorarioEntrega; code[unique=true];name;displayname[lang=$lang]
+                     ;01;Matutino;Morning - From the opening until 1:00 p.m.
+                     ;02;Vespertino;Evening - From 1:00 p.m. until closing
+
+INSERT_UPDATE Unit; code[unique = true]; name[lang = $lang]; unitType   ; conversion[default = 1.0]
+                  ; KGM                ; Kg.               ; Peso Kilos ; 1
+                  ; GRM                ; Grm.              ; Peso Kilos ; 0.001
+                  ; EA                 ; Pie.              ; EA         ; 1
+                  ; TNE                ; Ton               ; TNE        ; 1000
+                  ; ONZ                ; Oz                ; ONZ        ; 1
+                  ; LBR                ; Lb                ; LBR        ; 1
+                  ; XPK                ; Pkg               ; XPK        ; 1
+                  ; XBX                ; Box               ; XBX        ; 1
+
+UPDATE ProcesoPreparacion; code[unique = true]; name     ; displayname[lang = $lang]
+                         ; 001                ; Rebanado ; Sliced
+                         ; 002                ; Corte    ; Cut
+                         ; 003                ; Molido   ; Ground
+
+INSERT_UPDATE BusinessTypeInfo;businessTypeCode[unique = true];businessTypeText[lang=$lang]
+                              ;Z01;Pizzas;
+                              ;Z02;Cafeteria;
+                              ;Z03;Hamburguers;
+                              ;Z04;Tortas;
+                              ;Z05;Taquerías;
+                              ;Z06;Restaurant;
+                              ;Z07;Hot dogs;
+                              ;Z08;Gorditas;
+                              ;Z09;Cooperatives;
+                              ;Z10;Industrial Dining Rooms;
+                              ;Z11;Banquets;
+                              ;Z12;Poulterer's Shop;
+                              ;Z13;Consumption Occasion;
+                              ;Z14;Bars and Canteens;
+                              ;Z15;Day Care Centers;
+                              ;Z16;Carnitas;
+                              ;Z17;Shopkeeper;
+                              ;Z18;Butcher Shop;
+                              ;Z19;Distributor;
+                              ;Z20;Reseller;
+                              ;Z21;Farmers Market;
+                              ;Z22;Hotels;
+                              ;Z23;Burreros;
+                              ;Z24;Fairs;
+                              ;Z25;Economic Kitchen;
+                              ;Z26;Government Unit;
+                              ;Z27;Fish Market;
+                              ;Z28;Chinese Food Restaurant;
+                              ;Z29;Mexican Food Restaurant;
+                              ;Z30;Arabic Food Restaurant;
+                              ;Z31;Mini-super;
+                              ;Z32;Boats;
+                              ;Z33;Hospitals;
+                              ;Z34;Coffee Shops;
+                              ;Z35;Birria Shops;
+                              ;Z36;Menudo Shops;
+                              ;Z37;Tamales;
+
+#INSERT_UPDATE C4CCustomerRole;customerRoleCode[unique = true];customerRoleText
+#                             ;10;Bill To Address
+#                             ;39;Seller
+#                             ;1001;Customer
+#                             ;1005;Ship To Address

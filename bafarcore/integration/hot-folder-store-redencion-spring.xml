@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ [y] hybris Platform
+ Copyright (c) 2018 SAP SE or an SAP affiliate company.  All rights reserved.
+ This software is the confidential and proprietary information of SAP
+ ("Confidential Information"). You shall not disclose such Confidential
+ Information and shall use it only in accordance with the terms of the
+ license agreement you entered into with SAP.
+-->
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:int="http://www.springframework.org/schema/integration"
+       xmlns:file="http://www.springframework.org/schema/integration/file"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/integration
+		http://www.springframework.org/schema/integration/spring-integration.xsd
+		http://www.springframework.org/schema/integration/file
+		http://www.springframework.org/schema/integration/file/spring-integration-file.xsd
+		http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <context:annotation-config/>
+
+    <bean id="baseDirectoryRedemption" class="java.lang.String">
+        <constructor-arg value="#{baseDirectory}/${tenantId}/redemption"/>
+    </bean>
+    <!-- 1) Scan for files -->
+    <file:inbound-channel-adapter id="batchFilesRedemption" directory="#{baseDirectoryRedemption}"
+                                  filename-regex="^(.*)-(\d+)\.csv" comparator="fileOrderComparator">
+        <int:poller fixed-rate="1000"/>
+    </file:inbound-channel-adapter>
+
+    <!-- 2) move the file to processing and setup header -->
+    <file:outbound-gateway request-channel="batchFilesRedemption" reply-channel="batchFilesRedemptionProc"
+                           directory="#{baseDirectoryRedemption}/processing" delete-source-files="true"/>
+    <int:service-activator input-channel="batchFilesRedemptionProc" output-channel="batchFilesHeaderInit"
+                           ref="redemptionHeaderSetupTask" method="execute"/>
+    <bean id="redemptionHeaderSetupTask"
+          class="de.hybris.platform.acceleratorservices.dataimport.batch.task.HeaderSetupTask">
+        <property name="catalog" value="bafarProductCatalog"/>
+        <property name="net" value="false"/>
+        <property name="storeBaseDirectory" ref="baseDirectoryRedemption"/>
+    </bean>
+
+    <!-- 3) transform csv to impex file
+    <int:service-activator input-channel="batchFilesHeader" output-channel="batchFilesTran" ref="batchTransformerTask"
+                           method="execute"/>
+    <bean id="batchTransformerTask"
+          class="de.hybris.platform.acceleratorservices.dataimport.batch.task.ImpexTransformerTask"
+          init-method="initConvertersMap">
+        <property name="fieldSeparator" value=","/>
+        <property name="encoding" value="UTF-8"/>
+        <property name="linesToSkip" value="1"/>
+        <property name="cleanupHelper" ref="cleanupHelper"/>
+    </bean> -->
+
+    <!-- Converters -->
+
+    <bean id="batchRedemptionCabeceroConverterMapping"
+          class="de.hybris.platform.acceleratorservices.dataimport.batch.converter.mapping.impl.DefaultConverterMapping"
+          p:mapping="redemption"
+          p:converter-ref="batchRedemptionConverter"/>
+
+
+    <bean id="batchRedemptionDetalleConverterMapping"
+          class="de.hybris.platform.acceleratorservices.dataimport.batch.converter.mapping.impl.DefaultConverterMapping"
+          p:mapping="redemption"
+          p:converter-ref="batchRedemptionDetalleConverter"/>
+
+
+
+    <bean id="batchRedemptionConverter" class="de.hybris.platform.acceleratorservices.dataimport.batch.converter.impl.DefaultImpexConverter">
+        <property name="header"
+                  value="INSERT_UPDATE RedemptionOfPoint;redemptionCode[unique=true];initValidDate[dateformat=yyyyMMdd];endValidDate[dateformat=yyyyMMdd];reference;idStore"/>
+        <property name="impexRow">
+            <value>
+                #% java.lang.System.out.println("Inicia Cabecero");
+                $flag={0};
+                #% java.lang.System.out.println("$flag");
+                "#% if: ""$flag"".equals(""C"")"
+                $flag2={3};
+                #% java.lang.System.out.println("$flag2");
+                $flag4={4};
+                #% java.lang.System.out.println("$flag4");
+                ;{1};{2};{3};{4};{5};{1}
+                #% endif:
+                #% java.lang.System.out.println("Fin Cabecero");
+            </value>
+        </property>
+    </bean>
+
+
+    <bean id="batchRedemptionDetalleConverter" class="de.hybris.platform.acceleratorservices.dataimport.batch.converter.impl.DefaultImpexConverter">
+        <property name="header"
+                  value="INSERT_UPDATE RedemptionOfPointDetail;redemptionOfPoint(redemptionCode)[unique=true];posnr[unique=true];vkorg;idTienda;discountDescription;discount;amount;typeCurrency;numberPoint;pointUnit"/>
+        <property name="impexRow">
+            <value>
+                #% java.lang.System.out.println("Inicia Detalle");
+                $flag={+0};
+                #% java.lang.System.out.println("$flag");
+
+                "#% if: ""$flag"".equals(""D"")"
+                $flag3={1};
+                #% java.lang.System.out.println("$flag3");
+                $flag4={2};
+                #% java.lang.System.out.println("$flag4");
+                ;{1};{2};{3};{4};{5};{6};{7};{8};{9};{10}
+                #% endif:
+
+                #% java.lang.System.out.println("Fin Detalle");
+
+            </value>
+        </property>
+    </bean>
+
+
+
+
+
+
+
+
+</beans>

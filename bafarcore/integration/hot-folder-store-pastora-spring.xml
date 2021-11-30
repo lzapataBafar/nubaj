@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ [y] hybris Platform
+
+ Copyright (c) 2018 SAP SE or an SAP affiliate company.  All rights reserved.
+
+ This software is the confidential and proprietary information of SAP
+ ("Confidential Information"). You shall not disclose such Confidential
+ Information and shall use it only in accordance with the terms of the
+ license agreement you entered into with SAP.
+-->
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:int="http://www.springframework.org/schema/integration"
+       xmlns:file="http://www.springframework.org/schema/integration/file"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/integration
+		http://www.springframework.org/schema/integration/spring-integration.xsd
+		http://www.springframework.org/schema/integration/file
+		http://www.springframework.org/schema/integration/file/spring-integration-file.xsd
+		http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <context:annotation-config/>
+
+    <bean id="baseDirectoryPastora" class="java.lang.String">
+        <constructor-arg value="#{baseDirectory}/${tenantId}/pastora"/>
+    </bean>
+    <!-- 1) Scan for files -->
+    <file:inbound-channel-adapter id="batchFilesPastora" directory="#{baseDirectoryPastora}"
+                                  filename-regex="^(.*)-(\d+)\.csv" comparator="fileOrderComparator">
+        <int:poller fixed-rate="1000"/>
+    </file:inbound-channel-adapter>
+
+    <!-- 2) move the file to processing and setup header -->
+    <file:outbound-gateway request-channel="batchFilesPastora" reply-channel="batchFilesPastoraProc"
+                           directory="#{baseDirectoryPastora}/processing" delete-source-files="true"/>
+    <int:service-activator input-channel="batchFilesPastoraProc" output-channel="batchFilesHeaderInit"
+                           ref="pastoraHeaderSetupTask" method="execute"/>
+    <bean id="pastoraHeaderSetupTask"
+          class="de.hybris.platform.acceleratorservices.dataimport.batch.task.HeaderSetupTask">
+        <property name="catalog" value="pastoraProductCatalog"/>
+        <property name="net" value="false"/>
+        <property name="storeBaseDirectory" ref="baseDirectoryPastora"/>
+    </bean>
+
+    <!-- 3) transform csv to impex file -->
+    <int:service-activator input-channel="batchFilesHeader" output-channel="batchFilesTran" ref="batchTransformerTask"
+                           method="execute"/>
+    <bean id="batchTransformerTask"
+          class="de.hybris.platform.acceleratorservices.dataimport.batch.task.ImpexTransformerTask"
+          init-method="initConvertersMap">
+        <property name="fieldSeparator" value=","/>
+        <property name="encoding" value="UTF-8"/>
+        <property name="linesToSkip" value="1"/>
+        <property name="cleanupHelper" ref="cleanupHelper"/>
+    </bean>
+
+    <!-- Converters -->
+
+    <!-- Se agregan dos mapeos de precios, el primero limpia los precios de la tienda/producto para eliminar las
+         líneas de precios que ya no se utilizan, el segundo inserta los nuevos precios actualizados -->
+
+    <bean id="batchPastoraPriceDelConverterMapping"
+          class="de.hybris.platform.acceleratorservices.dataimport.batch.converter.mapping.impl.DefaultConverterMapping"
+          p:mapping="precioslp"
+          p:converter-ref="batchPastoraDelPriceConverter"/>
+
+    <bean id="batchPastoraPriceAddConverterMapping"
+          class="de.hybris.platform.acceleratorservices.dataimport.batch.converter.mapping.impl.DefaultConverterMapping"
+          depends-on="batchPastoraPriceDelConverterMapping"
+          p:mapping="precioslp"
+          p:converter-ref="batchPastoraAddPriceConverter"/>
+
+    <bean id="batchPastoraDelPriceConverter" class="de.hybris.platform.acceleratorservices.dataimport.batch.converter.impl.DefaultImpexConverter" >
+        <property name="header">
+            <value>
+                # ImpEx for Removing Prices from $CATALOG$
+                $catalog=$CATALOG$
+                #% impex.setLocale(Locale.ENGLISH);
+                REMOVE PriceRow[batchmode=true];product(code,catalogversion(catalog(id),version))[unique=true];ug(code)[unique=true];catalogversion(catalog(id),version);sequenceId[translator=de.hybris.platform.acceleratorservices.dataimport.batch.converter.SequenceIdTranslator]
+            </value>
+        </property>
+        <property name="impexRow">
+            <value>
+                ;{+0}:$catalog:Staged;{+5};$catalog:Staged;{S};
+                ;{+0}:$catalog:Online;{+5};$catalog:Online;{S}
+            </value>
+        </property>
+    </bean>
+
+    <bean id="batchPastoraAddPriceConverter" class="de.hybris.platform.acceleratorservices.dataimport.batch.converter.impl.DefaultImpexConverter"
+          depends-on="batchPastoraDelPriceConverter">
+        <property name="header">
+            <value>
+                # ImpEx for Importing Prices into $CATALOG$
+                $catalog=$CATALOG$
+                #% impex.setLocale(Locale.ENGLISH);
+                INSERT_UPDATE PriceRow;product(code,catalogversion(catalog(id),version))[unique=true];price[translator=de.hybris.platform.acceleratorservices.dataimport.batch.converter.PriceTranslator];currency(isocode)[unique=true];net[default=false][unique=true];unit(code)[default=pieces][unique=true];unitFactor[default=1];minqtd[default=1][unique=true];ug(code)[unique=true];startTime[dateformat=dd.MM.yyyy HH:mm];endTime[dateformat=dd.MM.yyyy HH:mm];catalogversion(catalog(id),version);sequenceId[translator=de.hybris.platform.acceleratorservices.dataimport.batch.converter.SequenceIdTranslator]
+            </value>
+        </property>
+        <property name="impexRow">
+            <value>
+                ;{+0}:$catalog:Staged;{+1};{+2};;{+3};;{4};{+5};{6};{7};$catalog:Staged;{S};
+                ;{+0}:$catalog:Online;{+1};{+2};;{+3};;{4};{+5};{6};{7};$catalog:Online;{S}
+            </value>
+        </property>
+    </bean>
+
+
+
+</beans>

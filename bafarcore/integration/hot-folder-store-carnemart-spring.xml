@@ -1,0 +1,381 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ [y] hybris Platform
+
+ Copyright (c) 2018 SAP SE or an SAP affiliate company.  All rights reserved.
+
+ This software is the confidential and proprietary information of SAP
+ ("Confidential Information"). You shall not disclose such Confidential
+ Information and shall use it only in accordance with the terms of the
+ license agreement you entered into with SAP.
+-->
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:int="http://www.springframework.org/schema/integration"
+       xmlns:file="http://www.springframework.org/schema/integration/file"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/integration
+		http://www.springframework.org/schema/integration/spring-integration.xsd
+		http://www.springframework.org/schema/integration/file
+		http://www.springframework.org/schema/integration/file/spring-integration-file.xsd
+		http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <context:annotation-config/>
+
+    <bean id="baseDirectoryCarnemart" class="java.lang.String">
+        <constructor-arg value="#{baseDirectory}/${tenantId}/carnemart"/>
+    </bean>
+    <!-- 1) Scan for files -->
+    <file:inbound-channel-adapter id="batchFilesCarnemart" directory="#{baseDirectoryCarnemart}"
+                                  filename-regex="^(.*)-(\d+)\.csv" comparator="fileOrderComparator">
+        <int:poller fixed-rate="1000"/>
+    </file:inbound-channel-adapter>
+
+    <!-- 2) move the file to processing and setup header -->
+    <file:outbound-gateway request-channel="batchFilesCarnemart" reply-channel="batchFilesCarnemartProc"
+                           directory="#{baseDirectoryCarnemart}/processing" delete-source-files="true"/>
+    <int:service-activator input-channel="batchFilesCarnemartProc" output-channel="bafarBatchFilesHeaderInit"
+                           ref="carnemartHeaderSetupTask" method="execute"/>
+    <bean id="carnemartHeaderSetupTask"
+          class="de.hybris.platform.acceleratorservices.dataimport.batch.task.HeaderSetupTask">
+        <property name="catalog" value="carnemartstoreProductCatalog"/>
+        <property name="net" value="false"/>
+        <property name="storeBaseDirectory" ref="baseDirectoryCarnemart"/>
+    </bean>
+
+    <!-- 3) transform csv to impex file -->
+    <!--<int:service-activator input-channel="bafarBatchFilesHeaderInit" output-channel="bafarBatchFilesTran" ref="bafarBatchTransformerTask"
+                           method="execute"/>-->
+
+    <int:service-activator input-channel="bafarBatchFilesHeaderInit" output-channel="bafarBatchFilesHeader" ref="bafarHeaderInitTask"
+                           method="execute" />
+    <bean id="bafarHeaderInitTask" class="de.hybris.platform.acceleratorservices.dataimport.batch.task.HeaderInitTask">
+        <property name="sequenceIdParser" ref="bafarBatchSequenceIdParser"/>
+        <property name="languageParser" ref="bafarBatchLanguageParser"/>
+        <property name="fallbackLanguage" value="es_MX" />
+    </bean>
+    <bean id="bafarBatchSequenceIdParser" class="de.hybris.platform.acceleratorservices.dataimport.batch.util.SequenceIdParser">
+        <property name="parser">
+            <bean class="de.hybris.platform.acceleratorservices.util.RegexParser">
+                <property name="regex" value="-(\d+)\.csv" />
+            </bean>
+        </property>
+    </bean>
+    <bean id="bafarBatchLanguageParser" class="de.hybris.platform.acceleratorservices.util.RegexParser">
+        <property name="regex" value="-(\w{2})-(\d+)\.csv" />
+    </bean>
+
+    <int:service-activator input-channel="bafarBatchFilesHeader" output-channel="bafarBatchFilesTran" ref="bafarBatchTransformerTask"
+                           method="execute" />
+    <bean id="bafarBatchTransformerTask"
+          class="de.hybris.platform.acceleratorservices.dataimport.batch.task.ImpexTransformerTask"
+          init-method="initConvertersMap">
+        <property name="fieldSeparator" value=","/>
+        <property name="encoding" value="UTF-8"/>
+        <property name="linesToSkip" value="1"/>
+        <property name="cleanupHelper" ref="cleanupHelper"/>
+    </bean>
+
+    <!-- 4) run impex import -->
+    <int:service-activator input-channel="bafarBatchFilesTran" output-channel="batchFilesImp"
+                           ref="bafarBatchRunnerTask" method="execute" />
+    <bean id="bafarBatchRunnerTask" class="de.hybris.bafar.core.dataimport.batch.task.AbstractBafarImpexRunnerTask">
+        <property name="sessionService" ref="sessionService" />
+        <property name="importService" ref="importService" />
+        <lookup-method name="getImportConfig" bean="importConfig" />
+    </bean>
+
+    <!-- Converters -->
+
+    <!-- Se agregan dos mapeos de precios, el primero limpia los precios de la tienda/producto para eliminar las
+         líneas de precios que ya no se utilizan, el segundo inserta los nuevos precios actualizados -->
+
+    <bean id="batchCarnemartPriceDelConverterMapping"
+          class="de.hybris.platform.acceleratorservices.dataimport.batch.converter.mapping.impl.DefaultConverterMapping"
+          p:mapping="Precios"
+          p:converter-ref="batchCarnemartDelPriceConverter"/>
+
+    <bean id="batchCarnemartPriceAddConverterMapping"
+          class="de.hybris.platform.acceleratorservices.dataimport.batch.converter.mapping.impl.DefaultConverterMapping"
+          depends-on="batchCarnemartPriceDelConverterMapping"
+          p:mapping="Precios"
+          p:converter-ref="batchCarnemartAddPriceConverter"/>
+
+
+    <bean id="batchCarnemartDelPriceConverter" class="de.hybris.platform.acceleratorservices.dataimport.batch.converter.impl.DefaultImpexConverter" >
+        <property name="header">
+            <value>
+                # ImpEx for Removing Prices from $CATALOG$
+                $catalog=$CATALOG$
+                #% impex.setLocale(Locale.ENGLISH);
+                REMOVE PriceRow[batchmode=true];product(code,catalogversion(catalog(id),version))[unique=true];ug(code)[unique=true];catalogversion(catalog(id),version);sequenceId[translator=de.hybris.platform.acceleratorservices.dataimport.batch.converter.SequenceIdTranslator]
+            </value>
+        </property>
+        <property name="impexRow">
+            <value>
+                ;{+0}:$catalog:Staged;{+5};$catalog:Staged;{S}
+            </value>
+        </property>
+    </bean>
+<!--;{+0}:$catalog:Online;{+5};$catalog:Online;{S}-->
+    <bean id="batchCarnemartAddPriceConverter" class="de.hybris.platform.acceleratorservices.dataimport.batch.converter.impl.DefaultImpexConverter"
+          depends-on="batchCarnemartDelPriceConverter">
+        <property name="header">
+            <value>
+                # ImpEx for Importing Prices into $CATALOG$
+                $catalog=$CATALOG$
+                $minqtdColumn=minqtd[default=1][unique=true][cellDecorator=de.hybris.bafar.core.dataimport.batch.decorator.PriceMinqtdDecorator]
+                $unitFactorColumn=unitFactor[default=1][cellDecorator=de.hybris.bafar.core.dataimport.batch.decorator.PriceUnitFactorDecorator]
+                #% impex.setLocale(Locale.ENGLISH);
+                INSERT_UPDATE PriceRow;product(code,catalogversion(catalog(id),version))[unique=true];price[translator=de.hybris.platform.acceleratorservices.dataimport.batch.converter.PriceTranslator];currency(isocode)[unique=true];net[default=false][unique=true];unit(code)[default=pieces][unique=true];$unitFactorColumn;$minqtdColumn;ug(code)[unique=true];startTime[dateformat=dd.MM.yyyy HH:mm];endTime[dateformat=dd.MM.yyyy HH:mm];catalogversion(catalog(id),version);sequenceId[translator=de.hybris.platform.acceleratorservices.dataimport.batch.converter.SequenceIdTranslator]
+            </value>
+        </property>
+        <property name="impexRow">
+            <value>
+                ;{+0}:$catalog:Staged;{+1};{+2};;{+3};;{4};{+5};{6};{7};$catalog:Staged;{S}
+            </value>
+        </property>
+    </bean>
+<!--;{+0}:$catalog:Online;{+1};{+2};;{+3};;{4};{+5};{6};{7};$catalog:Online;{S}-->
+    <bean id="batchCarnemartProductConverterMapping"
+          class="de.hybris.platform.acceleratorservices.dataimport.batch.converter.mapping.impl.DefaultConverterMapping"
+          p:mapping="Productos"
+          p:converter-ref="batchCarnemartProductConverter"/>
+
+    <bean id="batchCarnemartProductConverter" class="de.hybris.platform.acceleratorservices.dataimport.batch.converter.impl.DefaultImpexConverter">
+        <property name="header">
+            <value>
+                # ImpEx for Importing Products into $CATALOG$
+                $catalog=$CATALOG$
+                $catalogVersion=catalogversion(catalog(id[default=$catalog]), version[default='Staged'])[unique=true, default=$catalog:Staged]
+                $supercategories=supercategories(code, $catalogVersion)
+                $baseProduct=baseProduct(code, $catalogVersion)
+                $approved=approvalstatus(code)[default='approved']
+                $productUnitCode=unit(code)[cellDecorator=de.hybris.bafar.core.dataimport.batch.decorator.ProductUnitDecorator]
+                #% impex.setLocale(Locale.ENGLISH);
+
+                # Insert Products
+                INSERT_UPDATE Product;code[unique=true];name[lang=es_MX];description[lang=es_MX];summary[lang=es_MX];$supercategories;manufacturerAID;manufacturerName;$productUnitCode;procesosPreparacion(code);$catalogVersion;$approved;sequenceId[translator=de.hybris.platform.acceleratorservices.dataimport.batch.converter.SequenceIdTranslator]
+            </value>
+        </property>
+        <property name="impexRow">
+            <value>
+                ;{+0};{+1};{2};{3};{+4};{5};{6};{+7};{8};;;{S}
+            </value>
+        </property>
+    </bean>
+
+    <bean id="batchCarnemartProductClassificationConverterMapping"
+          class="de.hybris.platform.acceleratorservices.dataimport.batch.converter.mapping.impl.DefaultConverterMapping"
+          p:mapping="Clasificaciones"
+          p:converter-ref="batchCarnemartProductClassificationConverter"/>
+
+    <bean id="batchCarnemartProductClassificationConverter" class="de.hybris.platform.acceleratorservices.dataimport.batch.converter.impl.DefaultImpexConverter">
+        <property name="header">
+            <value>
+                # ImpEx for Importing Classifications into $CATALOG$
+
+                # Macros / Replacement Parameter definitions
+                $productCatalog=$CATALOG$
+                $classificationCatalog=CarnemartstoreClassification
+
+                $catalogVersion = catalogversion(catalog(id[default=$productCatalog]), version[default='Staged'])[unique=true, default=$productCatalog:Staged]
+                $clAttrModifiers = system='$classificationCatalog', version='1.0', translator=de.hybris.platform.catalog.jalo.classification.impex.ClassificationAttributeTranslator, lang=es_MX
+
+                $feature1 = @CABAFAR1000[$clAttrModifiers];
+                $feature2 = @CABAFAR1001[$clAttrModifiers];
+                $feature3 = @CABAFAR1002[$clAttrModifiers];
+                $feature4 = @CABAFAR1003[$clAttrModifiers];
+                $feature6 = @CABAFAR1004[$clAttrModifiers];
+                $feature7 = @CABAFAR1005[$clAttrModifiers];
+                $feature8 = @CABAFAR1006[$clAttrModifiers];
+                $feature9 = @CABAFAR1007[$clAttrModifiers];
+                $feature10 = @CABAFAR1008[$clAttrModifiers];
+                $feature11 = @CABAFAR1009[$clAttrModifiers];
+                $feature12 = @CABAFAR2000[$clAttrModifiers];
+                $feature13 = @CABAFAR2001[$clAttrModifiers];
+                $feature14 = @CABAFAR2002[$clAttrModifiers];
+                $feature15 = @CABAFAR2003[$clAttrModifiers];
+                $feature16 = @CABAFAR2004[$clAttrModifiers];
+                $feature17 = @CABAFAR3000[$clAttrModifiers];
+                $feature18 = @CABAFAR3001[$clAttrModifiers];
+                $feature19 = @CABAFAR3002[$clAttrModifiers];
+
+                UPDATE Product;code[unique=true];$feature1;$feature2;$feature3;$feature4;$feature6;$feature7;$feature8;$feature9;$feature10;$feature11;$feature12;$feature13;$feature14;$feature15;$feature16;$feature17;$feature18;$feature19;$catalogVersion;
+            </value>
+        </property>
+        <property name="impexRow">
+            <value>
+                ;{+0};{1};{2};{3};{4};{5};{6};{7};{8};{9};{10};{11};{12};{13};{14};{15};{16};{17};{18}
+            </value>
+        </property>
+    </bean>
+
+    <bean id="batchCarnemartProductStockConverterMapping"
+          class="de.hybris.platform.acceleratorservices.dataimport.batch.converter.mapping.impl.DefaultConverterMapping"
+          p:mapping="InventarioProductosCarnemart"
+          p:converter-ref="batchCarnemartProductStockConverter"/>
+
+    <bean id="batchCarnemartProductStockRelConverterMapping"
+          class="de.hybris.platform.acceleratorservices.dataimport.batch.converter.mapping.impl.DefaultConverterMapping"
+          depends-on="batchCarnemartProductStockConverterMapping"
+          p:mapping="InventarioProductosCarnemart"
+          p:converter-ref="batchCarnemartProductStockRelConverter"/>
+
+    <bean id="batchCarnemartProductStockConverter" class="de.hybris.platform.acceleratorservices.dataimport.batch.converter.impl.DefaultImpexConverter">
+        <property name="header">
+            <value>
+                # ImpEx for Importing Stock Levels into $CATALOG$
+                $productCatalog = $CATALOG$
+                $catalogVersion = catalogversion(catalog(id[default=$productCatalog]), version[default='Staged'])[unique=true, default=$productCatalog:Staged]
+
+                INSERT_UPDATE StockLevel;productCode[unique=true];warehouse(code)[unique=true,default=default];available;inStockStatus(code);maxPreOrder[default=1];maxStockLevelHistoryCount[default=-1];overSelling[default=0];preOrder[default=0];reserved[default = 0]
+            </value>
+        </property>
+        <property name="impexRow">
+            <value>
+                ;{+0};{+1};{+2};notSpecified
+            </value>
+        </property>
+    </bean>
+
+    <bean id="batchCarnemartProductStockRelConverter" class="de.hybris.platform.acceleratorservices.dataimport.batch.converter.impl.DefaultImpexConverter"
+        depends-on="batchCarnemartProductStockConverter">
+        <property name="header">
+            <value>
+                # ImpEx for Importing Stock Levels into $CATALOG$
+                $productCatalog=$CATALOG$
+                $catalogVersion = catalogversion(catalog(id[default=$productCatalog]), version[default='Staged'])[unique=true, default=$productCatalog:Staged]
+                $vendor=carnemartstore
+                INSERT_UPDATE Product;code[unique=true];stockLevels(productCode,warehouse(code));vendors(code)[default=$vendor];$catalogVersion
+            </value>
+        </property>
+        <property name="impexRow">
+            <value>
+                ;{+0};{+0}:{+1}
+            </value>
+        </property>
+    </bean>
+
+    <bean id="batchCarnemartProductB2BUnitConverterMapping"
+          class="de.hybris.platform.acceleratorservices.dataimport.batch.converter.mapping.impl.DefaultConverterMapping"
+          p:mapping="ProductosTienda"
+          p:converter-ref="batchCarnemartProductB2BUnitConverter"/>
+
+    <bean id="batchCarnemartProductB2BUnitConverter" class="de.hybris.platform.acceleratorservices.dataimport.batch.converter.impl.DefaultImpexConverter">
+        <property name="header">
+            <value>
+                # ImpEx for Importing B2BUnits into $CATALOG$
+                $productCatalog=$CATALOG$
+                $catalogVersion = catalogversion(catalog(id[default=$productCatalog]), version[default='Staged'])[unique=true, default='$productCatalog:Staged']
+
+                INSERT_UPDATE B2BUnit2ProductRel;source(uid)[unique=true];target(code,$catalogVersion)[unique=true]
+            </value>
+        </property>
+        <property name="impexRow">
+            <value>
+                ;{+0};{+1}
+            </value>
+        </property>
+    </bean>
+
+    <bean id="batchCarnemartPromotionsConverterMapping"
+          class="de.hybris.platform.acceleratorservices.dataimport.batch.converter.mapping.impl.DefaultConverterMapping"
+          p:mapping="Promociones"
+          p:converter-ref="batchCarnemartPromotionsConverter"/>
+
+    <bean id="batchCarnemartPromotionsConverter" class="de.hybris.bafar.core.dataimport.batch.converter.impl.BafarImpexConverter">
+        <property name="header">
+            <value>
+                # ImpEx for Importing Promotons into $CATALOG$
+                $productCatalog=$CATALOG$
+                $defaultPromoGrp=carnemartstorePromoGrp
+                $promotionsModule="promotions-module"
+                $previewModule="promotions-preview-module"
+                $ruleImportProcessor=processor=de.hybris.platform.ruleengineservices.impex.impl.ConditionalImportProcessor,condition=de.hybris.platform.ruleengineservices.impex.impl.RuleImportCondition
+
+                INSERT_UPDATE PromotionSourceRule[$ruleImportProcessor];code[unique = true];priority;maxAllowedRuns;ruleGroup(code);conditions;actions;website(Identifier)[default=$defaultPromoGrp];excludeFromStorefrontDisplay[default=false];status(code)[unique=true, default=UNPUBLISHED]
+                "#% afterEach: de.hybris.platform.core.Registry.getApplicationContext().getBean(""ruleEngineSystemSetup"").registerSourceRuleForDeployment(impex.getLastImportedItem(), new String[]{$promotionsModule,$previewModule});"
+            </value>
+        </property>
+        <property name="impexRow">
+            <value>;¿+0?;10;1;retCarnemartProductPromotionRuleGroup;"[{""definitionId"":""y_qualifying_products"",""parameters"":{""catalog_version"": {""uuid"":""2f2530b8-d941-4145-8d9e-80db0409acdb"",""type"":""ItemType(CatalogVersion)"",""value"":""carnemartstoreProductCatalog::Staged""},""products_operator"":{""uuid"":""9b07a7d7-8481-412f-94a2-79c7e823566c"",""type"":""Enum(de.hybris.platform.ruledefinitions.CollectionOperator)"",""value"":""CONTAINS_ANY""},""quantity"":{""uuid"":""c7ac47a7-d285-479f-989c-40e461246602"",""type"":""java.lang.Integer"",""value"":1},""operator"":{""uuid"":""99df04b6-fd29-4fc0-8e78-3a83c6eb4ec9"",""type"":""Enum(de.hybris.platform.ruledefinitions.AmountOperator)"",""value"":""GREATER_THAN_OR_EQUAL""},""products"":{""uuid"":""0164259c-8014-4cf4-a315-83cf050b0b4a"",""type"":""List(ItemType(Product))"",""value"":[""¿+1?""]}},""children"":[]},{""definitionId"":""y_target_customers"",""parameters"":{""customer_groups"":{""uuid"":""94ae472b-90b9-484b-9230-42cf956af2ef"",""type"":""List(ItemType(UserGroup))"",""value"":[""¿+2?""]},""customer_groups_operator"":{""uuid"":""f28e1a11-668e-42c6-bbc6-d64dd386862d"",""type"":""Enum(de.hybris.platform.ruledefinitions.CollectionOperator)"",""value"":""CONTAINS_ANY""},""customers"":{""uuid"":""b615a521-14ae-4f34-93a0-cbbdecf1cc51"",""type"":""List(ItemType(Customer))"",""value"":[]},""excluded_customers"":{""uuid"":""51d5cad3-92e3-4530-a946-166e642894ce"",""type"":""List(ItemType(Customer))"",""value"":[]},""excluded_customer_groups"":{""uuid"":""6ca1c6ee-3908-4859-b7ff-59c89d625f52"",""type"":""List(ItemType(UserGroup))"",""value"":[]}},""children"":[]}]"";[{""parameters"":{},""definitionId"":""y_trigger_message""}]";</value>
+        </property>
+    </bean>
+
+    <!--Manuel Romero: begin-->
+    <bean id="c4cOrderConverterMapping"
+          class="de.hybris.platform.acceleratorservices.dataimport.batch.converter.mapping.impl.DefaultConverterMapping"
+          p:mapping="c4cOrder"
+          p:converter-ref="c4cOrderConverter"
+    />
+    <bean id="c4cOrderConverter" class="de.hybris.platform.acceleratorservices.dataimport.batch.converter.impl.DefaultImpexConverter">
+        <property name="header">
+            <value>
+                $productCatalog=$CATALOG$
+                $catalog-version=Online
+                $catalogVersion=catalogversion(catalog(id[default=$productCatalog]),version[default=$catalog-version])[unique=true, default=$productCatalog:$catalog-version]
+                $siteUid=carnemartstore
+                <!--
+                actionCode, orderId, baseStore, customerId,
+                c4cTicketId, ***************** DEFINIR EN TYPE ORDERS *****************
+                actualDeliveryDate,
+                paid, [NOTPAID, RETAINED, CANCELLED, PARTPAID, PAID]
+                billed, [true, false]
+                paymentDate, ***************** DEFINIR EN TYPE ORDERS *****************
+                bafarStatusId, [CANCELLING, CREATED, CANCELLED, COMPLETED, PAYMENT_AUTHORIZED, OPEN, etc.]
+                accumPoints,
+                totalAmountBeforeTaxes, totalDiscountAmount, totalTaxesAmount,
+                totalAmountAfterTaxDisc, ***************** DEFINIR EN TYPE ORDERS *****************
+                shippingCost, discountMoneyVal, totalAmountToPay
+-->
+            INSERT_UPDATE Order;code[unique=true];Unit(uid);user(uid);codigoAccion;fechaEntregaDeseada[dateformat=dd.MM.yyyy HH:mm];paymentStatus[code, default='PAID'];invoiceSend;status[code, default='CREATED'];puntosAcumulados;subtotal;totalDiscounts;totalTax;deliveryCost;valorDineroDescuento;totalPrice;date[dateformat=dd.MM.yyyy HH:mm];currency(isocode)
+            </value>
+<!--                ;net;deliveryMode(code[default='premium-gross']);paymentMode(code);Discounts(code);calculated;site(uid);store(uid);status(code);name;description;expirationTime[dateformat=dd.MM.yyyy HH:mm:ss];globalDiscountValuesInternal;-->
+        </property>
+        <property name="impexRow">
+            <value>;{+0};{+1};{+2};{3};{4};{5};{6};{7};{8};{9};{10};{11};{12};{13};{14};{15};{16}</value>
+        </property>
+    </bean>
+
+    <bean id="c4cOrderEntryConverterMapping"
+          class="de.hybris.platform.acceleratorservices.dataimport.batch.converter.mapping.impl.DefaultConverterMapping"
+          p:mapping="c4cOrderEntry"
+          p:converter-ref="c4cOrderEntryConverter"
+    />
+    <bean id="c4cOrderEntryConverter" class="de.hybris.platform.acceleratorservices.dataimport.batch.converter.impl.DefaultImpexConverter">
+        <property name="header">
+            <value>
+                $productCatalog=$CATALOG$
+                $catalog-version=Online
+                $catalogVersion=catalogversion(catalog(id[default=$productCatalog]), version[default=$catalog-version])[unique=true, default=$productCatalog:$catalog-version]
+                $itemPosition=entryNumber[translator=de.hybris.bafaracceleratorservices.dataimport.batch.converter.C4COrderItemTranslator]
+<!--
+                itemData.setItemCode(item.getString(KEY_ITEMCODE));
+                itemData.setItemPrice(item.getString(KEY_ITEMPRICE));
+                itemData.setItemDsct(item.getString(KEY_ITEMDSCT));
+                itemData.setItemTotal(item.getString(KEY_ITEMTOTAL));
+                itemData.setItemAction(item.getString(KEY_ITEMACTION));
+                itemData.setItemCancellation(item.getString(KEY_ITEMCANCELLATION));
+                itemData.setItemStatus(item.getString(KEY_ITEMSTATUS));
+                itemData.setItemQty(item.getString(KEY_ITEMQTY));
+                itemData.setItemUnit(item.getString(KEY_ITEMUNIT));
+                itemData.setItemNo(item.getString(KEY_ITEMNO));
+-->
+                INSERT_UPDATE OrderEntry;order(code)[unique=true];product(code,$catalogVersion)[unique=true];basePrice;discountValues;totalLinea;c4cActionCode;c4cCancellation;c4cStatus;quantity;unit(code);$itemPosition
+            </value>
+        </property>
+        <property name="impexRow">
+            <!--Row values sample: ;testOrder1;HW1210-3422:$catalog-id:$catalog-version;4;false;pieces;0-->
+            <value>
+                ;{+0};{+1};{+2};{3};{4};{5};{6};{7};{+8};{+9};{+10}
+            </value>
+        </property>
+    </bean>
+    <!--Manuel Romero:end-->
+
+</beans>

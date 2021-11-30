@@ -1,0 +1,210 @@
+# -----------------------------------------------------------------------
+# [y] hybris Platform
+#
+# Copyright (c) 2018 SAP SE or an SAP affiliate company.  All rights reserved.
+#
+# This software is the confidential and proprietary information of SAP
+# ("Confidential Information"). You shall not disclose such Confidential
+# Information and shall use it only in accordance with the terms of the
+# license agreement you entered into with SAP.
+# -----------------------------------------------------------------------
+# Import essential data for the Accelerator
+#
+# Includes:
+# * Languages
+# * Currencies
+# * Titles
+# * Vendors
+# * Warehouses
+# * Supported Credit/Debit cards
+# * User Groups
+# * DistanceUnits for Storelocator
+# * MediaFolders
+# * MediaFormats
+# * Tax & Tax Groups
+# * Jobs
+# * Metodo Entrega
+# * Metodo Pago
+# * Canal Venta
+# * Org Venta
+# * Horario Entrega
+
+# Languages
+INSERT_UPDATE Language;isocode[unique=true];name;fallbackLanguages(isocode);active[default=true]
+                      ;en                  ;English;                          ;;
+                      ;es                  ;Spanish;en                          ;;
+                      ;es_MX               ;Spanish Mexico;es                        ;;
+
+# Currencies
+INSERT_UPDATE Currency;isocode[unique=true];conversion;digits;symbol
+                      ;MXN            ;1         ;2     ;$
+
+# SiteMap Language Currencies
+INSERT_UPDATE SiteMapLanguageCurrency;&siteMapLanguageCurrency;language(isoCode)[unique=true];currency(isocode)[unique=true];
+                                     ;esMXN;es;MXN
+                                     ;es_MXMXN;es_MX;MXN
+
+
+# Disable preview for email pages
+UPDATE CMSPageType;code[unique=true];previewDisabled
+                  ;EmailPage;true
+
+# Titles
+INSERT_UPDATE Title;code[unique=true]
+                   ;Sr.
+                   ;Sra.
+                   ;Srita.
+
+#INSERT_UPDATE CreditCardType;code[forceWrite=true,unique=true,allownull=true]
+#;amex
+#;master
+#;visa
+#;spei
+
+# Media Folders
+INSERT_UPDATE MediaFolder;qualifier[unique=true];path[unique=true]
+                         ;images;images
+                         ;email-body;email-body
+                         ;email-attachments;email-attachments
+                         ;documents;documents
+
+# Media formats
+INSERT_UPDATE MediaFormat;qualifier[unique=true]
+                         ;1200Wx1200H
+                         ;515Wx515H
+                         ;365Wx246H
+                         ;300Wx300H
+                         ;96Wx96H
+                         ;65Wx65H
+                         ;30Wx30H
+;mobile
+;tablet
+;desktop
+;widescreen
+
+# Tax & Tax Groups
+INSERT_UPDATE UserTaxGroup;code[unique=true]
+                          ;mx-taxes
+
+INSERT_UPDATE ProductTaxGroup;code[unique=true]
+                             ;mx-iva-none
+                             ;mx-iva-full
+                             ;mx-ieps-01
+                             ;mx-ieps-03
+                             ;mx-ieps-10
+                             ;mx-ieps-21
+                             ;mx-ieps-04
+                             ;mx-ieps-23
+                             ;mx-ieps-120
+
+
+INSERT_UPDATE Tax;code[unique=true];value;currency(isocode)
+                 ;mx-iva-none;0
+                 ;mx-iva-full;16
+                 ;mx-ieps-01;1
+                 ;mx-ieps-03;3
+                 ;mx-ieps-10;10
+                 ;mx-ieps-21;21
+                 ;mx-ieps-04;4
+                 ;mx-ieps-23;23
+                 ;mx-ieps-120;120
+
+INSERT_UPDATE ServicelayerJob;code[unique=true];springId[unique=true]
+                             ;cartRemovalJob;cartRemovalJob
+                             ;siteMapMediaJob;siteMapMediaJob
+
+INSERT_UPDATE MetodoEntrega;code[unique=true];name
+                           ;01;Recoger en Tienda
+                           ;02;Entrega a Domicilio
+
+INSERT_UPDATE MetodoPago; code[unique=true];name;enabled
+                        ;01;Pago en Línea con Tarjeta de Crédito;TRUE
+                        ;02;Pago en Línea con Tarjeta de Débito;FALSE
+                        ;03;Pago con SPEI;TRUE
+                        ;04;Pago con Cheque;TRUE
+                        ;05;Crédito Carnemart;FALSE
+                        ;06;Crédito Vextor;TRUE
+                        ;07;Pago en Efectivo;FALSE
+                        ;08;Pago en Caja (Incluye Pago en Efectivo, Cheque, crédito, o TC/TD);FALSE
+                        ;09;Pago en Reparto (Incluye Pago en Efectivo o TC/TD);FALSE
+
+
+INSERT_UPDATE CanalVenta; code[unique=true];name
+                        ;01;Canal ECO
+                        ;02;Canal Venta Telefónica
+                        ;03;Canal Venta en Campo
+
+INSERT_UPDATE OrgVenta; code[unique=true];name
+                      ;3100;BIF
+                      ;3200;Carnemart
+                      ;3600;La Pastora
+
+INSERT_UPDATE UserRole; code[unique=true];name
+                      ;10;Destinatario de Factura
+                      ;39;Vendedor
+                      ;1001;Cliente
+                      ;1005;Destinatario de Mercancía
+
+INSERT_UPDATE HorarioEntrega; code[unique=true];name;horarioInicial[dateformat=hh:mm];horarioFinal[dateformat=hh:mm]
+                            ;01;Matutino;09:00;13:00
+                            ;02;Vespertino;13:00;18:00
+
+INSERT_UPDATE Unit; code[unique = true]; name     ; unitType   ; conversion[default = 1.0]
+                  ; KGM                ; Kg.      ; Peso Kilos ; 1
+                  ; GRM                ; Grm.     ; Peso Kilos ; 0.001
+                  ; EA                 ; Pza.     ; EA         ; 1
+                  ; TNE                ; Tonelada ; TNE        ; 1
+                  ; ONZ                ; Onza     ; ONZ        ; 1
+                  ; LBR                ; Libra    ; LBR        ; 1
+                  ; XPK                ; Paq.     ; XPK        ; 1
+                  ; XBX                ; Caja     ; XBX        ; 1
+
+INSERT_UPDATE ProcesoPreparacion; code[unique = true]; name
+                                ; 001                ; Rebanado
+                                ; 002                ; Corte
+                                ; 003                ; Molido
+
+INSERT_UPDATE BusinessTypeInfo;businessTypeCode[unique = true];businessTypeText
+                              ;Z01;Pizzas;
+                              ;Z02;Fondas;
+                              ;Z03;Hamburguesas;
+                              ;Z04;Tortas;
+                              ;Z05;Taquería;
+                              ;Z06;Restaurante;
+                              ;Z07;Hot dogs;
+                              ;Z08;Gorditas;
+                              ;Z09;Cooperativas;
+                              ;Z10;Comedores Industriales;
+                              ;Z11;Banquetes;
+                              ;Z12;Pollerías;
+                              ;Z13;Ocasión de Consumo;
+                              ;Z14;Bares y cantinas;
+                              ;Z15;Guarderías;
+                              ;Z16;Carnitas;
+                              ;Z17;Tendero;
+                              ;Z18;Carnicería;
+                              ;Z19;Distribuidor;
+                              ;Z20;Revendedor;
+                              ;Z21;Tianguis;
+                              ;Z22;Hoteles;
+                              ;Z23;Burreros;
+                              ;Z24;Ferias;
+                              ;Z25;Cocina Económica;
+                              ;Z26;Dependencia de Gobierno;
+                              ;Z27;Pescaderías;
+                              ;Z28;Restaurante Comida China;
+                              ;Z29;Restaurante Comida Mexicana;
+                              ;Z30;Restaurante Comida Árabe;
+                              ;Z31;Minisuper;
+                              ;Z32;Barcos;
+                              ;Z33;Hospitales;
+                              ;Z34;Cafeterías;
+                              ;Z35;Birriería;
+                              ;Z36;Menudería;
+                              ;Z37;Tamales;
+
+#INSERT_UPDATE C4CCustomerRole;customerRoleCode[unique = true];customerRoleText
+#;10;Destinatario de Factura
+#;39;Vendedor
+#;1001;Cliente
+#;1005;Destinatario de Mercancía
