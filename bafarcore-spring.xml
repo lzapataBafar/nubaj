@@ -1,0 +1,1356 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ [y] hybris Platform
+
+ Copyright (c) 2018 SAP SE or an SAP affiliate company.  All rights reserved.
+
+ This software is the confidential and proprietary information of SAP
+ ("Confidential Information"). You shall not disclose such Confidential
+ Information and shall use it only in accordance with the terms of the
+ license agreement you entered into with SAP.
+-->
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xmlns="http://www.springframework.org/schema/beans"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+           http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
+
+    <context:annotation-config/>
+    <context:component-scan base-package="de.hybris.bafar.stock" />
+
+
+
+    <!-- Spring Integration -->
+    <import resource="classpath:/bafarcore/integration/hot-folder-store-carnemart-spring.xml"/>
+    <import resource="classpath:/bafarcore/integration/hot-folder-store-pastora-spring.xml"/>
+    <import resource="classpath:/bafarcore/integration/hot-folder-store-bif-spring.xml"/>
+    <import resource="classpath:/bafarcore/integration/hot-folder-common-spring.xml"/>
+    <import resource="classpath:/bafarcore/integration/hot-folder-crossselling-spring.xml"/>
+    <import resource="classpath:/bafarcore/integration/hot-folder-upselling-spring.xml"/>
+    <import resource="classpath:/bafarcore/integration/hot-folder-store-redencion-spring.xml"/>
+    <import resource="classpath:/bafarcore/integration/hot-folder-top-spring.xml"/>
+
+    <import resource="classpath:/bafarservices-spring.xml"/>
+
+    <!-- SystemSetup for the BafarCore -->
+    <bean id="acceleratorCoreSystemSetup" class="de.hybris.bafar.core.setup.CoreSystemSetup"
+          parent="abstractCoreSystemSetup"/>
+
+    <!-- Solr field value providers -->
+
+    <bean id="volumeAwareProductPriceValueProvider"
+          class="de.hybris.bafar.core.search.solrfacetsearch.provider.impl.VolumeAwareProductPriceValueProvider"
+          parent="abstractPropertyFieldValueProvider">
+        <property name="fieldNameProvider" ref="solrFieldNameProvider"/>
+        <property name="priceService" ref="priceService"/>
+        <property name="commonI18NService" ref="commonI18NService"/>
+        <property name="sessionService" ref="sessionService"/>
+        <property name="userService" ref="userService"/>
+        <property name="priceComparator" ref="volumePriceComparator"/>
+        <property name="catalogVersionService" ref="catalogVersionService"/>
+    </bean>
+
+
+    <bean id="volumePriceComparator" class="de.hybris.bafar.core.comparators.VolumeAwarePriceInformationComparator"
+          scope="singleton"/>
+
+    <bean id="productVolumePricesProvider"
+          class="de.hybris.bafar.core.search.solrfacetsearch.provider.impl.ProductVolumePricesProvider"
+          parent="abstractPropertyFieldValueProvider">
+        <property name="fieldNameProvider" ref="solrFieldNameProvider"/>
+        <property name="priceService" ref="priceService"/>
+    </bean>
+
+
+    <bean id="electronicsCategorySource" parent="abstractCategorySource">
+        <property name="rootCategory" value="1"/>
+        <!-- '1' is the root icecat category -->
+    </bean>
+    <bean id="electronicsBrandCategorySource" parent="abstractCategorySource">
+        <property name="rootCategory" value="brands"/>
+        <!-- 'brands' is the root of the brands hierarchy -->
+    </bean>
+
+    <bean id="apparelCategorySource" parent="abstractCategorySource">
+        <property name="rootCategory" value="categories"/>
+        <!-- 'categories' is the root apparel category -->
+    </bean>
+    <bean id="apparelBrandCategorySource" parent="abstractCategorySource">
+        <property name="rootCategory" value="brands"/>
+        <!-- 'brands' is the root of the brands hierarchy -->
+    </bean>
+    <bean id="apparelCollectionCategorySource" parent="abstractCategorySource">
+        <property name="rootCategory"
+                  value="collections"/> <!-- 'collections' is the root of the collections hierarchy -->
+    </bean>
+
+    <bean id="abstractCategoryCodeValueProvider" abstract="true"
+          class="de.hybris.platform.commerceservices.search.solrfacetsearch.provider.impl.CategoryCodeValueProvider"
+          parent="abstractPropertyFieldValueProvider">
+        <property name="fieldNameProvider" ref="solrFieldNameProvider"/>
+        <property name="commonI18NService" ref="commonI18NService"/>
+    </bean>
+    <bean id="abstractCategoryNameValueProvider" abstract="true"
+          class="de.hybris.platform.commerceservices.search.solrfacetsearch.provider.impl.CategoryNameValueProvider"
+          parent="abstractPropertyFieldValueProvider">
+        <property name="fieldNameProvider" ref="solrFieldNameProvider"/>
+        <property name="commonI18NService" ref="commonI18NService"/>
+    </bean>
+
+    <bean id="electronicsCategoryCodeValueProvider" parent="abstractCategoryCodeValueProvider">
+        <property name="categorySource" ref="electronicsCategorySource"/>
+    </bean>
+    <bean id="electronicsBrandCategoryCodeValueProvider" parent="abstractCategoryCodeValueProvider">
+        <property name="categorySource" ref="electronicsBrandCategorySource"/>
+    </bean>
+    <bean id="electronicsCategoryNameValueProvider" parent="abstractCategoryNameValueProvider">
+        <property name="categorySource" ref="electronicsCategorySource"/>
+    </bean>
+    <bean id="electronicsBrandCategoryNameValueProvider" parent="abstractCategoryNameValueProvider">
+        <property name="categorySource" ref="electronicsBrandCategorySource"/>
+    </bean>
+
+    <bean id="apparelCategoryCodeValueProvider" parent="abstractCategoryCodeValueProvider">
+        <property name="categorySource" ref="apparelCategorySource"/>
+    </bean>
+    <bean id="apparelBrandCategoryCodeValueProvider" parent="abstractCategoryCodeValueProvider">
+        <property name="categorySource" ref="apparelBrandCategorySource"/>
+    </bean>
+    <bean id="apparelCollectionCategoryCodeValueProvider" parent="abstractCategoryCodeValueProvider">
+        <property name="categorySource" ref="apparelCollectionCategorySource"/>
+    </bean>
+    <bean id="apparelCategoryNameValueProvider" parent="abstractCategoryNameValueProvider">
+        <property name="categorySource" ref="apparelCategorySource"/>
+    </bean>
+    <bean id="apparelBrandCategoryNameValueProvider" parent="abstractCategoryNameValueProvider">
+        <property name="categorySource" ref="apparelBrandCategorySource"/>
+    </bean>
+    <bean id="apparelCollectionCategoryNameValueProvider" parent="abstractCategoryNameValueProvider">
+        <property name="categorySource" ref="apparelCollectionCategorySource"/>
+    </bean>
+
+    <bean id="image515ValueProvider" parent="abstractImageValueProvider">
+        <property name="mediaFormat" value="515Wx515H"/>
+    </bean>
+    <bean id="image300ValueProvider" parent="abstractImageValueProvider">
+        <property name="mediaFormat" value="300Wx300H"/>
+    </bean>
+    <bean id="image96ValueProvider" parent="abstractImageValueProvider">
+        <property name="mediaFormat" value="96Wx96H"/>
+    </bean>
+    <bean id="image65ValueProvider" parent="abstractImageValueProvider">
+        <property name="mediaFormat" value="65Wx65H"/>
+    </bean>
+    <bean id="image30ValueProvider" parent="abstractImageValueProvider">
+        <property name="mediaFormat" value="30Wx30H"/>
+    </bean>
+
+    <bean id="productUrlValueProvider"
+          class="de.hybris.platform.commerceservices.search.solrfacetsearch.provider.impl.ProductUrlValueProvider"
+          parent="abstractPropertyFieldValueProvider">
+        <property name="urlResolver" ref="productModelUrlResolver"/>
+        <property name="fieldNameProvider" ref="solrFieldNameProvider"/>
+        <property name="i18nService" ref="i18nService"/>
+        <property name="commonI18NService" ref="commonI18NService"/>
+    </bean>
+
+    <bean id="promotionCodeValueProvider"
+          class="de.hybris.platform.commerceservices.search.solrfacetsearch.provider.impl.PromotionCodeValueProvider"
+          parent="abstractPropertyFieldValueProvider">
+        <property name="promotionsService" ref="promotionsService"/>
+        <property name="fieldNameProvider" ref="solrFieldNameProvider"/>
+    </bean>
+
+	<bean id="promotionCodeValueResolver"
+		  class="de.hybris.bafar.core.search.solrfacetsearch.provider.impl.PromotionCodeValueResolver"
+		  parent="abstractValueResolver" >
+		<property name="promotionsService" ref="promotionsService"/>
+		<property name="fieldNameProvider" ref="solrFieldNameProvider"/>
+		<property name="timeService" ref="timeService"/>
+		<property name="commonI18NService" ref="defaultCommonI18NService"/>
+		<property name="promotionEngineService" ref="defaultPromotionEngineService"/>
+	</bean>
+
+    <bean id="promotionImageValueResolver"
+          class="de.hybris.bafar.core.search.solrfacetsearch.provider.impl.PrimaryPromotionImageValueResolver"
+          parent="abstractValueResolver" >
+        <property name="promotionsService" ref="promotionsService"/>
+        <property name="fieldNameProvider" ref="solrFieldNameProvider"/>
+        <property name="timeService" ref="timeService"/>
+        <property name="commonI18NService" ref="defaultCommonI18NService"/>
+    </bean>
+
+	<bean id="unitCodeValueResolver"
+		  class="de.hybris.bafar.core.search.solrfacetsearch.provider.impl.UnitCodeValueResolver"
+		  parent="abstractValueResolver" >
+		<property name="fieldNameProvider" ref="solrFieldNameProvider"/>
+	</bean>
+
+	<bean id="classificationAttributeValueResolver"
+		  class="de.hybris.bafar.core.search.solrfacetsearch.provider.impl.ClassificationAttributeValueResolver"
+		  parent="abstractValueResolver" >
+		<property name="fieldNameProvider" ref="solrFieldNameProvider"/>
+		<property name="classificationService" ref="classificationService"/>
+		<property name="commonI18NService" ref="defaultCommonI18NService"/>
+		<property name="i18nService" ref="defaultI18NService"/>
+		<property name="rangeNameProvider" ref="defaultRangeNameProvider"/>
+        <property name="modelService" ref="defaultModelService"/>
+    </bean>
+
+
+	<bean id="promotionImageValueProvider"
+	      class="de.hybris.platform.commerceservices.search.solrfacetsearch.provider.impl.PrimaryPromotionImageValueProvider"
+	      parent="abstractPropertyFieldValueProvider" >
+		<property name="promotionsService" ref="defaultPromotionsService"/>
+		<property name="fieldNameProvider" ref="solrFieldNameProvider"/>
+	</bean>
+
+    <bean id="colorFacetValueProvider"
+          class="de.hybris.bafar.core.search.solrfacetsearch.provider.impl.ColorFacetValueProvider"
+          parent="abstractPropertyFieldValueProvider">
+        <property name="fieldNameProvider" ref="solrFieldNameProvider"/>
+    </bean>
+
+    <bean id="colorFacetDisplayNameProvider"
+          class="de.hybris.bafar.core.search.solrfacetsearch.provider.impl.ColorFacetDisplayNameProvider"
+    >
+        <property name="enumerationService" ref="enumerationService"/>
+        <property name="i18nService" ref="i18nService"/>
+        <property name="commonI18NService" ref="commonI18NService"/>
+    </bean>
+
+    <bean id="apparelPointOfServiceFacetDisplayNameProvider"
+          class="de.hybris.bafar.core.search.solrfacetsearch.provider.impl.PointOfServiceFacetDisplayNameProvider"
+    >
+        <property name="pointOfServiceService" ref="pointOfServiceService"/>
+    </bean>
+
+    <bean id="electronicsPointOfServiceFacetDisplayNameProvider"
+          class="de.hybris.bafar.core.search.solrfacetsearch.provider.impl.PointOfServiceFacetDisplayNameProvider"
+    >
+        <property name="pointOfServiceService" ref="pointOfServiceService"/>
+    </bean>
+
+    <bean id="genderValueProvider"
+          class="de.hybris.bafar.core.search.solrfacetsearch.provider.impl.GenderValueProvider"
+          parent="abstractPropertyFieldValueProvider">
+        <property name="fieldNameProvider" ref="solrFieldNameProvider"/>
+    </bean>
+
+    <bean id="genderFacetDisplayNameProvider"
+          class="de.hybris.bafar.core.search.solrfacetsearch.provider.impl.GenderFacetDisplayNameProvider"
+    >
+        <property name="enumerationService" ref="enumerationService"/>
+        <property name="i18nService" ref="i18nService"/>
+        <property name="commonI18NService" ref="commonI18NService"/>
+    </bean>
+
+    <bean id="priceB2BUnitFacetDisplayNameProvider"
+          class="de.hybris.bafar.core.search.solrfacetsearch.provider.impl.PriceB2BUnitFacetValueDisplayNameProvider">
+    </bean>
+
+    <bean id="categoryPathFacetDisplayNameProvider"
+          class="de.hybris.bafar.core.search.solrfacetsearch.provider.impl.CategoryPathFacetValuDisplayNameProvider">
+        <property name="categoryService" ref="categoryService"/>
+    </bean>
+
+
+    <bean id="b2bUnitCollectionResolver"
+          class="de.hybris.bafar.core.search.solrfacetsearch.provider.impl.B2BUnitCollectionResolver"
+          parent="abstractValueResolver"
+    >
+        <property name="b2bUnitService" ref="defaultB2BUnitService"/>
+
+    </bean>
+
+    <bean id="productB2BUnitPricesResolver"
+          class="de.hybris.bafar.core.search.solrfacetsearch.provider.impl.ProductB2BUnitPricesResolver"
+          parent="abstractValueResolver">
+        <property name="fieldNameProvider" ref="solrFieldNameProvider"/>
+        <property name="priceService" ref="priceService"/>
+        <property name="commonI18NService" ref="commonI18NService"/>
+        <property name="userService" ref="userService"/>
+        <property name="priceComparator" ref="volumePriceComparator"/>
+        <property name="catalogVersionService" ref="catalogVersionService"/>
+        <property name="rangeNameProvider" ref="defaultRangeNameProvider"/>
+        <property name="bafarNetPriceService" ref="bafarPriceService"/>
+    </bean>
+
+
+    <alias name="customCommerceSearchSolrQueryPopulator" alias="commerceSearchSolrQueryPopulator"/>
+    <bean id="customCommerceSearchSolrQueryPopulator"
+          class="de.hybris.bafar.core.search.solrfacetsearch.populators.CustomCommerceSearchSolrQueryPopulator"
+          parent="defaultCommerceSearchSolrQueryPopulator">
+        <property name="userService" ref="userService"/>
+        <property name="sessionService" ref="sessionService"/>
+        <property name="warehouseService" ref="defaultWarehouseService"/>
+        <property name="b2BUnitService" ref="defaultB2BUnitService"/>
+    </bean>
+
+    <bean id="bafarCategorySource" parent="variantCategorySource">
+        <property name="rootCategory" value="1"/> <!-- '1' is the root icecat category -->
+    </bean>
+
+    <bean id="bafarCategoryNameValueProvider" parent="abstractCategoryNameValueProvider">
+        <property name="categorySource" ref="bafarCategorySource"/>
+    </bean>
+
+    <bean id="bafarCategoryCodeValueProvider" parent="abstractCategoryCodeValueProvider">
+        <property name="categorySource" ref="bafarCategorySource"/>
+    </bean>
+
+
+    <bean id="bafarBrandCategorySource" parent="defaultCategorySource">
+        <property name="rootCategory" value="brands"/> <!-- 'brands' is the root of the brands hierarchy -->
+    </bean>
+
+    <bean id="bafarBrandCategoryNameValueProvider" parent="abstractCategoryNameValueProvider">
+        <property name="categorySource" ref="bafarBrandCategorySource"/>
+    </bean>
+
+    <bean id="bafarBrandCategoryCodeValueProvider" parent="abstractCategoryCodeValueProvider">
+        <property name="categorySource" ref="bafarBrandCategorySource"/>
+    </bean>
+
+    <bean id="bafarVariantCategorySource" parent="variantCategorySource"/>
+
+    <bean id="bafarVariantCategoryCodeValueProvider" parent="abstractCategoryCodeValueProvider">
+        <property name="categorySource" ref="bafarVariantCategorySource"/>
+    </bean>
+
+
+
+    <!--
+        Event listeners are singletons, therefore the dependency for a bean in tenant-scope
+        must be configured with a lookup method.
+    -->
+    <bean id="orderCancelledEventListener"
+          class="de.hybris.bafar.core.event.OrderCancelledEventListener" parent="abstractAcceleratorSiteEventListener">
+        <property name="modelService" ref="modelService"/>
+        <property name="businessProcessService" ref="businessProcessService"/>
+    </bean>
+    <bean id="orderRefundEventListener"
+          class="de.hybris.bafar.core.event.OrderRefundEventListener" parent="abstractAcceleratorSiteEventListener">
+        <property name="modelService" ref="modelService"/>
+        <property name="businessProcessService" ref="businessProcessService"/>
+    </bean>
+    <bean id="customerRegistrationEventListener"
+          class="de.hybris.bafar.core.event.RegistrationEventListener" parent="abstractAcceleratorSiteEventListener">
+        <property name="modelService" ref="modelService"/>
+        <property name="businessProcessService" ref="businessProcessService"/>
+    </bean>
+    <bean id="forgottenPasswordEventListener"
+          class="de.hybris.bafar.core.event.ForgottenPasswordEventListener"
+          parent="abstractAcceleratorSiteEventListener">
+        <property name="modelService" ref="modelService"/>
+        <property name="businessProcessService" ref="businessProcessService"/>
+    </bean>
+    <bean id="submitOrderEventListener" class="de.hybris.bafar.core.event.SubmitOrderEventListener"
+          parent="abstractAcceleratorSiteEventListener">
+        <property name="businessProcessService" ref="businessProcessService"/>
+        <property name="modelService" ref="modelService"/>
+        <property name="baseStoreService" ref="baseStoreService"/>
+    </bean>
+    <bean id="orderConfirmationEventListener"
+          class="de.hybris.bafar.core.event.OrderConfirmationEventListener"
+          parent="abstractAcceleratorSiteEventListener">
+        <property name="modelService" ref="modelService"/>
+        <property name="businessProcessService" ref="businessProcessService"/>
+    </bean>
+    <bean id="sendDeliveryMessageEventListener"
+          class="de.hybris.bafar.core.event.SendDeliveryMessageEventListener"
+          parent="abstractAcceleratorSiteEventListener">
+        <property name="modelService" ref="modelService"/>
+        <property name="businessProcessService" ref="businessProcessService"/>
+    </bean>
+    <bean id="sendReadyForPickupMessageEventListener"
+          class="de.hybris.bafar.core.event.SendReadyForPickupMessageEventListener"
+          parent="abstractAcceleratorSiteEventListener">
+        <property name="modelService" ref="modelService"/>
+        <property name="businessProcessService" ref="businessProcessService"/>
+    </bean>
+    <bean id="sendOrderPartiallyCanceledMessageEventListener"
+          class="de.hybris.bafar.core.event.SendOrderPartiallyCanceledMessageEventListener"
+          parent="abstractAcceleratorSiteEventListener">
+        <property name="modelService" ref="modelService"/>
+        <property name="businessProcessService" ref="businessProcessService"/>
+    </bean>
+    <bean id="sendOrderPartiallyRefundedMessageEventListener"
+          class="de.hybris.bafar.core.event.SendOrderPartiallyRefundedMessageEventListener"
+          parent="abstractAcceleratorSiteEventListener">
+        <property name="modelService" ref="modelService"/>
+        <property name="businessProcessService" ref="businessProcessService"/>
+    </bean>
+    <bean id="sendNotPickedUpConsignmentCanceledMessageEventListener"
+          class="de.hybris.bafar.core.event.SendNotPickedUpConsignmentCanceledMessageEventListener"
+          parent="abstractAcceleratorSiteEventListener">
+        <property name="modelService" ref="modelService"/>
+        <property name="businessProcessService" ref="businessProcessService"/>
+    </bean>
+    <bean id="orderCompletedEventListener" class="de.hybris.bafar.core.event.OrderCompletedEventListener"
+          parent="abstractAcceleratorSiteEventListener">
+        <property name="modelService" ref="modelService"/>
+        <property name="businessProcessService" ref="businessProcessService"/>
+    </bean>
+
+    <!-- Process resources definition -->
+
+    <bean id="customerRegistrationEmailProcessDefinitionResource"
+          class="de.hybris.platform.processengine.definition.ProcessDefinitionResource">
+        <property name="resource" value="classpath:/bafarcore/processes/customerRegistrationEmailProcess.xml"/>
+    </bean>
+    <bean id="forgottenPasswordEmailProcessDefinitionResource"
+          class="de.hybris.platform.processengine.definition.ProcessDefinitionResource">
+        <property name="resource" value="classpath:/bafarcore/processes/forgottenPasswordEmailProcess.xml"/>
+    </bean>
+    <bean id="orderConfirmationEmailProcessDefinitionResource"
+          class="de.hybris.platform.processengine.definition.ProcessDefinitionResource">
+        <property name="resource" value="classpath:/bafarcore/processes/orderConfirmationEmailProcess.xml"/>
+    </bean>
+    <bean id="sendDeliveryEmailProcessDefinitionResource"
+          class="de.hybris.platform.processengine.definition.ProcessDefinitionResource">
+        <property name="resource" value="classpath:/bafarcore/processes/sendDeliveryEmailProcess.xml"/>
+    </bean>
+    <bean id="sendReadyForPickupEmailProcessDefinitionResource"
+          class="de.hybris.platform.processengine.definition.ProcessDefinitionResource">
+        <property name="resource" value="classpath:/bafarcore/processes/sendReadyForPickupEmailProcess.xml"/>
+    </bean>
+    <bean id="sendOrderCancelledEmailProcessDefinitionResource"
+          class="de.hybris.platform.processengine.definition.ProcessDefinitionResource">
+        <property name="resource" value="classpath:/bafarcore/processes/sendOrderCancelledEmailProcess.xml"/>
+    </bean>
+    <bean id="sendOrderRefundEmailProcessDefinitionResource"
+          class="de.hybris.platform.processengine.definition.ProcessDefinitionResource">
+        <property name="resource" value="classpath:/bafarcore/processes/sendOrderRefundEmailProcess.xml"/>
+    </bean>
+    <bean id="sendOrderPartiallyCanceledEmailProcessDefinitionResource"
+          class="de.hybris.platform.processengine.definition.ProcessDefinitionResource">
+        <property name="resource" value="classpath:/bafarcore/processes/sendOrderPartiallyCanceledEmailProcess.xml"/>
+    </bean>
+    <bean id="sendOrderPartiallyRefundedEmailProcessDefinitionResource"
+          class="de.hybris.platform.processengine.definition.ProcessDefinitionResource">
+        <property name="resource" value="classpath:/bafarcore/processes/sendOrderPartiallyRefundedEmailProcess.xml"/>
+    </bean>
+    <bean id="sendNotPickedUpConsignmentCanceledEmailProcessDefinitionResource"
+          class="de.hybris.platform.processengine.definition.ProcessDefinitionResource">
+        <property name="resource"
+                  value="classpath:/bafarcore/processes/sendNotPickedUpConsignmentCanceledEmailProcess.xml"/>
+    </bean>
+
+    <!-- Actions -->
+    <bean id="abstractAction" class="de.hybris.platform.processengine.action.AbstractAction"
+          abstract="true">
+        <property name="modelService" ref="modelService"/>
+        <property name="processParameterHelper" ref="processParameterHelper"/>
+    </bean>
+
+    <bean id="sendEmail" class="de.hybris.platform.acceleratorservices.process.email.actions.SendEmailAction"
+          parent="abstractAction">
+        <property name="emailService" ref="emailService"/>
+    </bean>
+
+    <bean id="abstractGenerateEmailAction"
+          class="de.hybris.platform.acceleratorservices.process.email.actions.GenerateEmailAction"
+          parent="abstractAction" abstract="true">
+        <property name="modelService" ref="modelService"/>
+        <property name="cmsEmailPageService" ref="cmsEmailPageService"/>
+        <property name="contextResolutionStrategy" ref="processContextResolutionStrategy"/>
+        <property name="emailGenerationService" ref="emailGenerationService"/>
+    </bean>
+
+    <bean id="generateCustomerRegistrationEmail" parent="abstractGenerateEmailAction">
+        <property name="frontendTemplateName" value="CustomerRegistrationEmailTemplate"/>
+    </bean>
+
+    <bean id="generateForgottenPasswordEmail" parent="abstractGenerateEmailAction">
+        <property name="frontendTemplateName" value="ForgottenPasswordEmailTemplate"/>
+    </bean>
+
+    <bean id="generateOrderConfirmationEmail" parent="abstractGenerateEmailAction">
+        <property name="frontendTemplateName" value="OrderConfirmationEmailTemplate"/>
+    </bean>
+
+    <bean id="generateDeliverySentEmail" parent="abstractGenerateEmailAction">
+        <property name="frontendTemplateName" value="DeliverySentEmailTemplate"/>
+    </bean>
+
+    <bean id="generateReadyForPickupEmail" parent="abstractGenerateEmailAction">
+        <property name="frontendTemplateName" value="ReadyForPickupEmailTemplate"/>
+    </bean>
+
+    <bean id="generateOrderCancelledEmail" parent="abstractGenerateEmailAction">
+        <property name="frontendTemplateName" value="OrderCancelledEmailTemplate"/>
+    </bean>
+
+    <bean id="generateOrderRefundEmail" parent="abstractGenerateEmailAction">
+        <property name="frontendTemplateName" value="OrderRefundEmailTemplate"/>
+    </bean>
+
+    <bean id="generateOrderPartiallyCanceledEmail" parent="abstractGenerateEmailAction">
+        <property name="frontendTemplateName" value="OrderPartiallyCanceledEmailTemplate"/>
+    </bean>
+    <bean id="generateOrderPartiallyRefundedEmail" parent="abstractGenerateEmailAction">
+        <property name="frontendTemplateName" value="OrderPartiallyRefundedEmailTemplate"/>
+    </bean>
+    <bean id="generateNotPickedUpConsignmentCanceledEmail" parent="abstractGenerateEmailAction">
+        <property name="frontendTemplateName" value="NotPickedUpConsignmentCanceledEmailTemplate"/>
+    </bean>
+
+    <bean id="removeSentEmail"
+          class="de.hybris.platform.acceleratorservices.process.email.actions.RemoveSentEmailAction"
+          parent="abstractAction">
+        <property name="modelService" ref="modelService"/>
+    </bean>
+
+    <bean id="markQuoteNotificationAsSent"
+          class="de.hybris.bafar.core.actions.quote.MarkQuoteNotificationAsSentAction"
+          parent="abstractAction" abstract="true">
+        <property name="quoteService" ref="quoteService"/>
+    </bean>
+
+    <!-- Simple Suggestion Service -->
+    <alias alias="simpleSuggestionService" name="defaultSimpleSuggestionService"/>
+    <bean id="defaultSimpleSuggestionService"
+          class="de.hybris.bafar.core.suggestion.impl.DefaultSimpleSuggestionService">
+        <property name="simpleSuggestionDao" ref="simpleSuggestionDao"/>
+    </bean>
+    <alias alias="simpleSuggestionDao" name="defaultSimpleSuggestionDao"/>
+    <bean id="defaultSimpleSuggestionDao"
+          class="de.hybris.bafar.core.suggestion.dao.impl.DefaultSimpleSuggestionDao"
+          parent="abstractItemDao">
+        <property name="flexibleSearchService" ref="flexibleSearchService"/>
+    </bean>
+
+    <bean id="mccSiteUrlHelper" class="de.hybris.bafar.core.util.MccSiteUrlHelper">
+        <property name="siteChannelValidationStrategy" ref="siteChannelValidationStrategy"/>
+        <property name="siteBaseUrlResolutionService" ref="siteBaseUrlResolutionService"/>
+        <property name="cmsSiteService" ref="cmsSiteService"/>
+    </bean>
+
+    <!--DAOs-->
+    <alias alias="procesoPreparacionDao" name="defaultProcesoPreparacionDao"/>
+    <bean id="defaultProcesoPreparacionDao" class="de.hybris.bafar.core.product.daos.impl.DefaultProcesoPreparacionDao">
+        <constructor-arg value="ProcesoPreparacion"/>
+    </bean>
+
+    <alias alias="metodoEntregaDao" name="defaultMetodoEntregaDao"/>
+    <bean id="defaultMetodoEntregaDao" class="de.hybris.bafar.core.order.dao.impl.DefaultMetodoEntregaDAO">
+        <constructor-arg value="MetodoEntrega"/>
+    </bean>
+
+    <alias alias="metodoPagoDao" name="defaultMetodoPagoDao"/>
+    <bean id="defaultMetodoPagoDao" class="de.hybris.bafar.core.order.dao.impl.DefaultMetodoPagoDAO">
+        <constructor-arg value="MetodoPago"/>
+    </bean>
+
+    <alias alias="canalVentaDao" name="defaultCanalVentaDao"/>
+    <bean id="defaultCanalVentaDao" class="de.hybris.bafar.core.order.dao.impl.DefaultCanalVentaDAO">
+        <constructor-arg value="CanalVenta"/>
+    </bean>
+
+    <alias alias="orgVentaDao" name="defaultOrgVentaDao"/>
+    <bean id="defaultOrgVentaDao" class="de.hybris.bafar.core.order.dao.impl.DefaultOrgVentaDAO">
+        <constructor-arg value="OrgVenta"/>
+    </bean>
+
+    <alias alias="horarioEntregaDao" name="defaultHorarioEntregaDao"/>
+    <bean id="defaultHorarioEntregaDao" class="de.hybris.bafar.core.order.dao.impl.DefaultHorarioEntregaDAO">
+        <constructor-arg value="HorarioEntrega"/>
+    </bean>
+
+    <!--Services-->
+
+    <alias alias="procesoPreparacionService" name="defaultProcesoPreparacionService"/>
+    <bean id="defaultProcesoPreparacionService" class="de.hybris.bafar.core.product.impl.DefaultProcesoPreparacionService"
+          parent="abstractBusinessService">
+        <property name="procesoPreparacionDao" ref="procesoPreparacionDao"/>
+    </bean>
+
+    <alias alias="metodoEntregaService" name="defaultMetodoEntregaService"/>
+    <bean id="defaultMetodoEntregaService" class="de.hybris.bafar.core.order.impl.DefaultMetodoEntregaService"
+          parent="abstractBusinessService">
+        <property name="metodoEntregaDao" ref="metodoEntregaDao"/>
+        <property name="metodoEntregaLookupStrategy" ref="metodoEntregaLookupStrategy"/>
+        <property name="configurationService" ref="configurationService"/>
+    </bean>
+
+    <alias alias="metodoPagoService" name="defaultMetodoPagoService"/>
+    <bean id="defaultMetodoPagoService" class="de.hybris.bafar.core.order.impl.DefaultMetodoPagoService"
+          parent="abstractBusinessService">
+        <property name="metodoPagoDao" ref="metodoPagoDao"/>
+        <property name="metodoPagoLookupStrategy" ref="metodoPagoLookupStrategy"/>
+    </bean>
+
+    <alias alias="canalVentaService" name="defaultCanalVentaService"/>
+    <bean id="defaultCanalVentaService" class="de.hybris.bafar.core.order.impl.DefaultCanalVentaService"
+          parent="abstractBusinessService">
+        <property name="canalVentaDao" ref="canalVentaDao"/>
+    </bean>
+
+    <alias alias="orgVentaService" name="defaultOrgVentaService"/>
+    <bean id="defaultOrgVentaService" class="de.hybris.bafar.core.order.impl.DefaultOrgVentaService"
+          parent="abstractBusinessService">
+        <property name="orgVentaDao" ref="orgVentaDao"/>
+    </bean>
+
+    <alias alias="horarioEntregaService" name="defaultHorarioEntregaService"/>
+    <bean id="defaultHorarioEntregaService" class="de.hybris.bafar.core.order.impl.DefaultHorarioEntregaService"
+          parent="abstractBusinessService">
+        <property name="horarioEntregaDao" ref="horarioEntregaDao"/>
+    </bean>
+
+    <alias alias="bafarPriceService" name="bafarPriceService"/>
+	<bean id="bafarPriceService" class="de.hybris.bafar.core.price.service.impl.BafarNetPriceService"
+		  parent="netPriceService">
+		<property name="timeService" ref="timeService"/>
+		<property name="sessionService" ref="defaultSessionService"/>
+	</bean>
+
+	<alias alias="bafarB2BCartService" name="bafarB2BCartService"/>
+	<bean id="bafarB2BCartService"
+		  class="de.hybris.bafar.core.order.impl.BafarB2BCartServiceImpl"
+		  parent="defaultB2BCartService">
+	</bean>
+
+	<bean id="bafarAddToCartStrategy"
+		  class="de.hybris.bafar.core.order.strategies.impl.BafarAddToCartStrategyImpl"
+		  parent="defaultCommerceAddToCartStrategy">
+		<property name="entryMergeStrategy" ref="entryMergeStrategy"/>
+		<property name="configurationService" ref="configurationService"/>
+		<property name="bafarB2BCartService" ref="bafarB2BCartService"/>
+        <property name="commerceStockService" ref="bafarCommerceStockService"/>
+    </bean>
+    <util:list id="commerceAddToCartMethodHooks"
+               value-type="de.hybris.bafar.core.order.hook.BafarConfigurableProductAddToCartMethodHook"/>
+
+
+    <alias name="bafarCommerceUpdateCartEntryStrategy" alias="bafarCommerceUpdateCartEntryStrategy"/>
+    <bean id="bafarCommerceUpdateCartEntryStrategy"
+          class="de.hybris.bafar.core.order.strategies.impl.BafarCommerceUpdateCartEntryStrategyImpl"
+          parent="defaultCommerceAddToCartStrategy">
+        <property name="procesoPreparacionService" ref="defaultProcesoPreparacionService"/>
+    </bean>
+
+    <alias alias="commerceMetodoEntregaStrategy" name="defaultCommerceMetodoEntregaStrategy"/>
+    <bean id="defaultCommerceMetodoEntregaStrategy"
+          class="de.hybris.bafar.core.order.impl.DefaultCommerceMetodoEntregaStrategy">
+        <property name="commerceCartCalculationStrategy" ref="checkoutCartCalculationStrategy"/>
+        <property name="modelService" ref="modelService"/>
+    </bean>
+
+    <alias alias="commerceMetodoEntregaValidationStrategy" name="defaultCommerceMetodoEntregaValidationStrategy"/>
+    <bean id="defaultCommerceMetodoEntregaValidationStrategy"
+          class="de.hybris.bafar.core.order.impl.DefaultCommerceMetodoEntregaValidationStrategy">
+        <property name="commerceCartCalculationStrategy" ref="checkoutCartCalculationStrategy"/>
+        <property name="modelService" ref="modelService"/>
+        <property name="metodoEntregaService" ref="metodoEntregaService"/>
+    </bean>
+
+    <alias alias="commerceHorarioEntregaStrategy" name="defaultCommerceHorarioEntregaStrategy"/>
+    <bean id="defaultCommerceHorarioEntregaStrategy"
+          class="de.hybris.bafar.core.order.impl.DefaultCommerceHorarioEntregaStrategy">
+        <property name="commerceCartCalculationStrategy" ref="checkoutCartCalculationStrategy"/>
+        <property name="modelService" ref="modelService"/>
+    </bean>
+
+    <alias alias="commerceMetodoHorarioValidationStrategy" name="defaultCommerceHorarioEntregaValidationStrategy"/>
+    <bean id="defaultCommerceHorarioEntregaValidationStrategy"
+          class="de.hybris.bafar.core.order.impl.DefaultCommerceHorarioEntregaValidationStrategy">
+        <property name="commerceCartCalculationStrategy" ref="checkoutCartCalculationStrategy"/>
+        <property name="modelService" ref="modelService"/>
+        <property name="horarioEntregaService" ref="horarioEntregaService"/>
+    </bean>
+
+
+    <alias alias="commercePhoneContactInfoTypeStrategy" name="defaultCommercePhoneContactInfoTypeStrategy"/>
+    <bean id="defaultCommercePhoneContactInfoTypeStrategy"
+          class="de.hybris.bafar.core.order.impl.DefaultCommercePhoneContactInfoTypeStrategy">
+        <property name="commerceCartCalculationStrategy" ref="checkoutCartCalculationStrategy"/>
+        <property name="modelService" ref="modelService"/>
+    </bean>
+
+    <alias alias="commercePhoneContactInfoTypeValidationStrategy" name="defaultCommercePhoneContactInfoTypeValidationStrategy"/>
+    <bean id="defaultCommercePhoneContactInfoTypeValidationStrategy"
+          class="de.hybris.bafar.core.order.impl.DefaultCommercePhoneContactInfoTypeValidationStrategy">
+        <property name="commerceCartCalculationStrategy" ref="checkoutCartCalculationStrategy"/>
+        <property name="modelService" ref="modelService"/>
+        <property name="enumerationService" ref="defaultEnumerationService"/>
+    </bean>
+
+
+    <alias alias="commercePhoneContactInfoStrategy" name="defaultCommercePhoneContactInfoStrategy"/>
+    <bean id="defaultCommercePhoneContactInfoStrategy"
+          class="de.hybris.bafar.core.order.impl.DefaultCommercePhoneContactInfoStrategy">
+        <property name="commerceCartCalculationStrategy" ref="checkoutCartCalculationStrategy"/>
+        <property name="modelService" ref="modelService"/>
+        <property name="commercePhoneContactInfoValidationStrategy" ref="commercePhoneContactInfoValidationStrategy"/>
+    </bean>
+
+    <alias alias="commercePhoneContactInfoValidationStrategy" name="defaultCommercePhoneContactInfoValidationStrategy"/>
+    <bean id="defaultCommercePhoneContactInfoValidationStrategy"
+          class="de.hybris.bafar.core.order.impl.DefaultCommercePhoneContactInfoValidationStrategy">
+        <property name="commerceCartCalculationStrategy" ref="checkoutCartCalculationStrategy"/>
+        <property name="modelService" ref="modelService"/>
+    </bean>
+
+    <alias alias="commerceFechaEntregaStrategy" name="defaultCommerceFechaEntregaStrategy"/>
+    <bean id="defaultCommerceFechaEntregaStrategy"
+          class="de.hybris.bafar.core.order.impl.DefaultCommerceFechaEntregaStrategy">
+        <property name="commerceCartCalculationStrategy" ref="checkoutCartCalculationStrategy"/>
+        <property name="modelService" ref="modelService"/>
+    </bean>
+
+    <alias alias="commerceFechaEntregaValidationStrategy" name="defaultCommerceFechaEntregaValidationStrategy"/>
+    <bean id="defaultCommerceFechaEntregaValidationStrategy"
+          class="de.hybris.bafar.core.order.impl.DefaultCommerceFechaEntregaValidationStrategy">
+        <property name="commerceCartCalculationStrategy" ref="checkoutCartCalculationStrategy"/>
+        <property name="modelService" ref="modelService"/>
+    </bean>
+
+
+    <!--	Bafar Commerce Cart Service-->
+    <alias alias="commerceCartService" name="bafarCommerceCartService"/>
+    <bean id="bafarCommerceCartService"
+          class="de.hybris.bafar.core.order.impl.BafarB2BCommerceCartServiceImpl"
+          parent="defaultB2BCommerceCartService">
+        <property name="modelService" ref="modelService"/>
+        <property name="baseSiteService" ref="baseSiteService"/>
+        <property name="commerceCartDao" ref="commerceCartDao"/>
+        <property name="cartValidationStrategy" ref="cartValidationStrategy"/>
+        <property name="commerceCartCalculationStrategy" ref="checkoutCartCalculationStrategy"/>
+        <property name="commerceCartEstimateTaxesStrategy" ref="commerceCartEstimateTaxesStrategy"/>
+        <property name="commerceCartHashCalculationStrategy" ref="commerceCartHashCalculationStrategy"/>
+        <property name="sessionService" ref="sessionService"/>
+        <property name="staleCartRemovalStrategy" ref="staleCartRemovalStrategy"/>
+        <property name="commerceAddToCartStrategy" ref="bafarAddToCartStrategy"/>
+<!--        <property name="commerceUpdateCartEntryStrategy" ref="commerceUpdateCartEntryStrategy"/>-->
+        <property name="commerceUpdateCartEntryStrategy" ref="bafarCommerceUpdateCartEntryStrategy"/>
+        <property name="commerceCartRestorationStrategy" ref="commerceCartRestorationStrategy"/>
+        <property name="commerceCartSplitStrategy" ref="commerceCartSplitStrategy"/>
+        <property name="commerceRemoveEntriesStrategy" ref="commerceRemoveEntriesStrategy"/>
+        <property name="commerceCartMergingStrategy" ref="commerceCartMergingStrategy"/>
+        <property name="commerceCartMetadataUpdateStrategy" ref="commerceCartMetadataUpdateStrategy"/>
+        <property name="productConfigurationStrategy" ref="productConfigurationStrategy"/>
+        <property name="removeEntryGroupStrategy" ref="removeEntryGroupStrategy"/>
+    </bean>
+
+    <alias name="bafarB2BCommerceCheckoutService" alias="bafarB2BCommerceCheckoutService"/>
+    <bean name="bafarB2BCommerceCheckoutService" class="de.hybris.bafar.core.order.impl.BafarB2BCommerceCheckoutServiceImpl"
+          parent="defaultB2BCommerceCheckoutService">
+        <property name="commerceMetodoEntregaStrategy" ref="commerceMetodoEntregaStrategy"/>
+        <property name="commerceMetodoEntregaValidationStrategy" ref="commerceMetodoEntregaValidationStrategy"/>
+        <property name="commerceHorarioEntregaValidationStrategy"
+                  ref="commerceMetodoHorarioValidationStrategy"/>
+        <property name="commerceHorarioEntregaStrategy" ref="commerceHorarioEntregaStrategy"/>
+        <property name="commercePhoneContactInfoStrategy" ref="commercePhoneContactInfoStrategy"/>
+        <property name="commercePhoneContactInfoValidationStrategy" ref="commercePhoneContactInfoValidationStrategy"/>
+        <property name="commerceFechaEntregaStrategy" ref="commerceFechaEntregaStrategy"/>
+        <property name="commerceFechaEntregaValidationStrategy" ref="commerceFechaEntregaValidationStrategy"/>
+        <property name="commerceMetodoPagoValidationStrategy" ref="commerceMetodoPagoValidationStrategy"/>
+        <property name="commerceMetodoPagoStrategy" ref="commerceMetodoPagoStrategy"/>
+    </bean>
+
+    <!--  Stock Service -->
+    <alias alias="bafarStockService" name="bafarStockService"/>
+    <bean id="bafarStockService" class="de.hybris.bafar.core.stock.impl.BafarStockServiceImpl">
+        <property name="modelService" ref="modelService"/>
+        <property name="stockLevelDao" ref="stockLevelDao"/>
+        <property name="inventoryService" ref="defaultInventoryService"/>
+        <property name="warehouseDao" ref="defaultWarehouseDao"/>
+        <property name="bafarStockLevelStatusStrategy" ref="bafarStockLevelStatusStrategy"/>
+        <property name="bafarProductAvailabilityStrategy" ref="bafarProductAvailabilityStrategy"/>
+        <property name="stockLevelProductStrategy" ref="defaultStockLevelProductID"/>
+    </bean>
+
+    <!--Strategies-->
+    <alias name="defaultMetodoEntregaLookupStrategy" alias="metodoEntregaLookupStrategy"/>
+    <bean id="defaultMetodoEntregaLookupStrategy"
+          class="de.hybris.bafar.core.order.strategies.impl.DefaultMetodoEntregaLookupStrategy">
+        <property name="metodoEntregaDao" ref="metodoEntregaDao"/>
+    </bean>
+
+    <alias name="defaultHorarioEntregaLookupStrategy" alias="horarioEntregaLookupStrategy"/>
+    <bean id="defaultHorarioEntregaLookupStrategy"
+          class="de.hybris.bafar.core.order.strategies.impl.DefaultHorarioEntregaLookupStrategy">
+        <property name="horarioEntregaDao" ref="horarioEntregaDao"/>
+    </bean>
+
+    <alias name="defaultMetodoPagoLookupStrategy" alias="metodoPagoLookupStrategy"/>
+    <bean id="defaultMetodoPagoLookupStrategy"
+          class="de.hybris.bafar.core.order.strategies.impl.DefaultMetodoPagoLookupStrategy">
+        <property name="metodoPagoDAO" ref="metodoPagoDao"/>
+    </bean>
+
+    <alias alias="bafarStockLevelStatusStrategy" name="bafarStockLevelStatusStrategy"/>
+    <bean id="bafarStockLevelStatusStrategy" class="de.hybris.bafar.core.stock.strategy.impl.BafarStockLevelStatusStrategyImpl"/>
+
+    <alias alias="bafarProductAvailabilityStrategy" name="bafarProductAvailabilityStrategy"/>
+    <bean id="bafarProductAvailabilityStrategy" class="de.hybris.bafar.core.stock.strategy.impl.BafarProductAvailabilityStrategyImpl">
+        <property name="i18nService" ref="i18nService"/>
+        <property name="bestMatchStrategy" ref="bestMatchStrategy"/>
+        <property name="bundleProvider" ref="basecommerce.resourceBundleProvider"/>
+        <property name="inventoryService" ref="defaultInventoryService"/>
+    </bean>
+
+    <alias alias="bafarCommerceAvailabilityCalculationStrategy" name="bafarCommerceAvailabilityCalculationStrategy"/>
+    <bean id="bafarCommerceAvailabilityCalculationStrategy"
+          class="de.hybris.bafar.core.stock.strategy.impl.BafarCommerceAvailabilityCalculationStrategyImpl"/>
+
+    <alias alias="bafarStorePickupDao" name="bafarStorePickupDao"/>
+    <bean id="bafarStorePickupDao" class="de.hybris.bafar.core.stock.dao.impl.BafarStorePickupDaoImpl">
+        <property name="inventoryService" ref="defaultInventoryService"/>
+    </bean>
+
+
+    <alias alias="bafarCommerceStockService" name="bafarCommerceStockService"/>
+    <bean id="bafarCommerceStockService"
+          class="de.hybris.bafar.core.stock.impl.BafarCommerceStockServiceImpl">
+        <property name="bafarStockService" ref="bafarStockService"/>
+        <property name="warehouseSelectionStrategy" ref="warehouseSelectionStrategy"/>
+        <property name="stockLevelProductStrategy" ref="stockLevelProductID"/>
+        <property name="bafarStockLevelStatusStrategy" ref="bafarStockLevelStatusStrategy"/>
+        <property name="bafarCommerceAvailabilityCalculationStrategy" ref="bafarCommerceAvailabilityCalculationStrategy"/>
+        <property name="bafarStorePickupDao" ref="bafarStorePickupDao"/>
+    </bean>
+
+    <!-- Product Reference Lookup Strategies-->
+    <alias name="apparelCrossSellingProductReferenceTargetStrategy" alias="crossSellingProductReferenceTargetStrategy"/>
+    <bean id="apparelCrossSellingProductReferenceTargetStrategy"
+          parent="defaultCrossSellingProductReferenceTargetStrategy">
+        <property name="productReferenceTargetStrategies">
+            <list merge="true">
+                <ref bean="apparelSizeProductReferenceTargetStrategy"/>
+            </list>
+        </property>
+    </bean>
+
+    <bean id="apparelSizeProductReferenceTargetStrategy"
+          class="de.hybris.bafar.core.strategies.impl.ApparelSizeProductReferenceTargetStrategy">
+        <property name="commerceCategoryService" ref="commerceCategoryService"/>
+        <property name="rootCategoryCode" value="categories"/>
+    </bean>
+
+    <!-- Sales quote process actions -->
+
+    <!-- quote-->
+    <bean id="quoteBuyerSubmitEventListener" class="de.hybris.bafar.core.event.QuoteBuyerSubmitEventListener"
+          parent="abstractEventListener">
+        <property name="modelService" ref="modelService"/>
+        <property name="businessProcessService" ref="businessProcessService"/>
+    </bean>
+
+    <bean id="quoteSalesRepSubmitEventListener" class="de.hybris.bafar.core.event.QuoteSalesRepSubmitEventListener"
+          parent="abstractEventListener">
+        <property name="modelService" ref="modelService"/>
+        <property name="businessProcessService" ref="businessProcessService"/>
+    </bean>
+
+    <bean id="quoteSellerApprovalSubmitEventListener"
+          class="de.hybris.bafar.core.event.QuoteSellerApprovalSubmitEventListener"
+          parent="abstractEventListener">
+        <property name="modelService" ref="modelService"/>
+        <property name="businessProcessService" ref="businessProcessService"/>
+    </bean>
+
+    <bean id="quoteBuyerOrderPlacedEventListener" class="de.hybris.bafar.core.event.QuoteBuyerOrderPlacedEventListener"
+          parent="abstractEventListener">
+        <property name="commerceQuoteService" ref="commerceQuoteService"/>
+        <property name="modelService" ref="modelService"/>
+    </bean>
+
+    <bean id="quoteToExpireSoonEventListener" class="de.hybris.bafar.core.event.QuoteToExpireSoonEventListener"
+          parent="abstractEventListener">
+        <property name="modelService" ref="modelService"/>
+        <property name="businessProcessService" ref="businessProcessService"/>
+    </bean>
+
+    <bean id="quoteExpiredEventListener" class="de.hybris.bafar.core.event.QuoteExpiredEventListener"
+          parent="abstractEventListener">
+        <property name="modelService" ref="modelService"/>
+        <property name="businessProcessService" ref="businessProcessService"/>
+    </bean>
+
+    <bean id="quoteCancelEventListener" class="de.hybris.bafar.core.event.QuoteCancelEventListener"
+          parent="abstractEventListener">
+        <property name="modelService" ref="modelService"/>
+        <property name="businessProcessService" ref="businessProcessService"/>
+    </bean>
+
+    <bean id="quoteBuyerProcessDefinitionResource"
+          class="de.hybris.platform.processengine.definition.ProcessDefinitionResource">
+        <property name="resource" value="classpath:/bafarcore/processes/quote/quote-buyer-process.xml"/>
+    </bean>
+
+    <bean id="quoteSalesRepProcessDefinitionResource"
+          class="de.hybris.platform.processengine.definition.ProcessDefinitionResource">
+        <property name="resource" value="classpath:/bafarcore/processes/quote/quote-salesrep-process.xml"/>
+    </bean>
+
+
+    <bean id="quoteSellerApprovalProcessDefinitionResource"
+          class="de.hybris.platform.processengine.definition.ProcessDefinitionResource">
+        <property name="resource" value="classpath:/bafarcore/processes/quote/quote-seller-approval-process.xml"/>
+    </bean>
+
+    <bean id="quotePostCancellationProcessDefinitionResource"
+          class="de.hybris.platform.processengine.definition.ProcessDefinitionResource">
+        <property name="resource" value="classpath:/bafarcore/processes/quote/quote-post-cancellation-process.xml"/>
+    </bean>
+
+    <bean id="quoteToExpireSoonProcessDefinitionResource"
+          class="de.hybris.platform.processengine.definition.ProcessDefinitionResource">
+        <property name="resource" value="classpath:/bafarcore/processes/quote/quote-to-expire-soon-email-process.xml"/>
+    </bean>
+
+    <bean id="quoteExpiredProcessDefinitionResource"
+          class="de.hybris.platform.processengine.definition.ProcessDefinitionResource">
+        <property name="resource" value="classpath:/bafarcore/processes/quote/quote-expired-email-process.xml"/>
+    </bean>
+
+    <!-- Quotes email notification jobs -->
+    <bean id="quoteToExpireSoonJobPerformable"
+          class="de.hybris.bafar.core.job.QuoteToExpireSoonJobPerformable"
+          parent="abstractJobPerformable">
+        <property name="supportedQuoteStatuses">
+            <set value-type="de.hybris.platform.core.enums.QuoteState">
+                <value>BUYER_OFFER</value>
+            </set>
+        </property>
+        <property name="commerceQuoteDao" ref="commerceQuoteDao"/>
+        <property name="eventService" ref="eventService"/>
+        <property name="configurationService" ref="configurationService"/>
+        <property name="timeService" ref="timeService"/>
+    </bean>
+
+    <bean id="quoteExpiredJobPerformable"
+          class="de.hybris.bafar.core.job.QuoteExpiredJobPerformable"
+          parent="abstractJobPerformable">
+        <property name="supportedQuoteStatuses">
+            <set value-type="de.hybris.platform.core.enums.QuoteState">
+                <value>BUYER_OFFER</value>
+            </set>
+        </property>
+        <property name="commerceQuoteDao" ref="commerceQuoteDao"/>
+        <property name="eventService" ref="eventService"/>
+        <property name="timeService" ref="timeService"/>
+    </bean>
+
+    <import resource="/bafarcore/processes/quote/quote-buyer-process-spring.xml"/>
+    <import resource="/bafarcore/processes/quote/quote-salesrep-process-spring.xml"/>
+    <import resource="/bafarcore/processes/quote/quote-seller-approval-process-spring.xml"/>
+    <import resource="/bafarcore/processes/quote/quote-to-expire-soon-email-process-spring.xml"/>
+    <import resource="/bafarcore/processes/quote/quote-expired-email-process-spring.xml"/>
+    <import resource="/bafarcore/processes/quote/quote-post-cancellation-process-spring.xml"/>
+
+    <!-- Customer cleanup -->
+    <alias name="defaultCustomerCleanupRelatedObjectsAction" alias="customerCleanupRelatedObjectsAction"/>
+    <bean id="defaultCustomerCleanupRelatedObjectsAction"
+          class="de.hybris.bafar.core.retention.impl.DefaultCustomerCleanupRelatedObjectsAction"
+          parent="abstractExtensibleRemoveCleanupAction">
+        <property name="itemCleanupHooks" ref="customerCleanupHooks"/>
+    </bean>
+
+    <!-- Cleanup the customers not owning any order currently and the current date has past deactivation date+retention date. Also removes customers audit records. -->
+    <alias name="defaultCustomerNotOwningOrdersRemoveCleanupAction" alias="customerNotOwningOrdersRemoveCleanupAction"/>
+    <bean id="defaultCustomerNotOwningOrdersRemoveCleanupAction"
+          class="de.hybris.platform.retention.impl.DefaultExtensibleRemoveCleanupAction"
+          parent="abstractExtensibleRemoveCleanupAction">
+        <property name="itemCleanupHooks" ref="customerCleanupHooks"/>
+    </bean>
+
+    <!-- Order cleanup -->
+    <!-- Cleanup the order related objects and then remove order and its audit records. -->
+    <alias name="defaultOrderRemoveCleanupAction" alias="orderRemoveCleanupAction"/>
+    <bean id="defaultOrderRemoveCleanupAction"
+          class="de.hybris.platform.retention.impl.DefaultExtensibleRemoveCleanupAction"
+          parent="abstractExtensibleRemoveCleanupAction">
+        <property name="itemCleanupHooks" ref="orderCleanupHooks"/>
+    </bean>
+
+	<!--	Add To Cart-->
+	<alias name="bafarConfigurableProductAddToCartMethodHook" alias="bafarConfigurableProductAddToCartMethodHook"/>
+	<bean id="bafarConfigurableProductAddToCartMethodHook"
+		  class="de.hybris.bafar.core.order.hook.BafarConfigurableProductAddToCartMethodHook">
+		<property name="configurationFactory" ref="productConfigurationHandlerFactory" />
+		<property name="modelService" ref="modelService" />
+		<property name="configuratorSettingsService" ref="configuratorSettingsService"/>
+	</bean>
+
+	<!-- CsTicket Remove action -->
+	<alias name="defaultCSTicketRemoveCleanupAction" alias="csTicketRemoveCleanupAction"/>
+	<bean id="defaultCSTicketRemoveCleanupAction" class="de.hybris.platform.retention.impl.DefaultExtensibleRemoveCleanupAction"
+          parent="abstractExtensibleRemoveCleanupAction">
+		<property name="itemCleanupHooks" ref="csTicketCleanupHooks"/>
+	</bean>
+
+    <!-- CsTicket Stagnation action -->
+    <alias name="defaultCSTicketStagnationAction" alias="csTicketStagnationAction"/>
+    <bean id="defaultCSTicketStagnationAction"
+          class="de.hybris.bafar.core.retention.impl.DefaultCSTicketStagnationAction"
+          parent="abstractExtensibleRemoveCleanupAction">
+        <property name="itemCleanupHooks" ref="csTicketRetentionHooks"/>
+        <property name="ticketBusinessService" ref="ticketBusinessService"/>
+    </bean>
+
+
+    <!--Custom-->
+    <alias alias="geoServiceWrapper" name="defaultCommerceMockGeoWebServiceWrapper"/>
+    <bean id="defaultCommerceMockGeoWebServiceWrapper"
+          class="de.hybris.platform.storelocator.impl.CommerceMockGeoWebServiceWrapper">
+        <property name="baseStoreService" ref="baseStoreService"/>
+        <property name="countryIsoGPSLocationMap" ref="countryIsoGPSLocationMap"/>
+    </bean>
+
+    <alias alias="countryIsoGPSLocationMap" name="defaultCountryIsoGPSLocationMap"/>
+    <bean id="defaultCountryIsoGPSLocationMap" class="org.springframework.beans.factory.config.MapFactoryBean">
+        <property name="sourceMap">
+            <map merge="true" key-type="java.lang.String" value-type="de.hybris.platform.storelocator.GPS">
+                <entry key="DEFAULT">
+                    <bean class="de.hybris.platform.storelocator.impl.DefaultGPS">
+                        <constructor-arg value="0D"/>
+                        <constructor-arg value="0D"/>
+                    </bean>
+                </entry>
+                <entry key="MX">
+                    <bean class="de.hybris.platform.storelocator.impl.DefaultGPS">
+                        <constructor-arg value="19.3911668D"/>
+                        <constructor-arg value="-99.4238193D"/>
+                    </bean>
+                </entry>
+                <entry key="CN">
+                    <bean class="de.hybris.platform.storelocator.impl.DefaultGPS">
+                        <constructor-arg value="35.0000D"/>
+                        <constructor-arg value="103.0000D"/>
+                    </bean>
+                </entry>
+                <entry key="JP">
+                    <bean class="de.hybris.platform.storelocator.impl.DefaultGPS">
+                        <constructor-arg value="35.7091D"/>
+                        <constructor-arg value="139.6732D"/>
+                    </bean>
+                </entry>
+                <entry key="US">
+                    <bean class="de.hybris.platform.storelocator.impl.DefaultGPS">
+                        <constructor-arg value="40.7127D"/>
+                        <constructor-arg value="-74.0059D"/>
+                    </bean>
+                </entry>
+                <entry key="GB">
+                    <bean class="de.hybris.platform.storelocator.impl.DefaultGPS">
+                        <constructor-arg value="51.513779D"/>
+                        <constructor-arg value="-0.1167D"/>
+                    </bean>
+                </entry>
+                <entry key="GG">
+                    <bean class="de.hybris.platform.storelocator.impl.DefaultGPS">
+                        <constructor-arg value="55.8642D"/>
+                        <constructor-arg value="-4.258D"/>
+                    </bean>
+                </entry>
+                <entry key="IM">
+                    <bean class="de.hybris.platform.storelocator.impl.DefaultGPS">
+                        <constructor-arg value="54.181727D"/>
+                        <constructor-arg value="-4.551086D"/>
+                    </bean>
+                </entry>
+                <entry key="JE">
+                    <bean class="de.hybris.platform.storelocator.impl.DefaultGPS">
+                        <constructor-arg value="52.531917D"/>
+                        <constructor-arg value="-0.47238D"/>
+                    </bean>
+                </entry>
+                <entry key="DE">
+                    <bean class="de.hybris.platform.storelocator.impl.DefaultGPS">
+                        <constructor-arg value="52.514524D"/>
+                        <constructor-arg value="13.35029D"/>
+                    </bean>
+                </entry>
+                <entry key="CA">
+                    <bean class="de.hybris.platform.storelocator.impl.DefaultGPS">
+                        <constructor-arg value="45.50866990"/>
+                        <constructor-arg value="-73.55399250"/>
+                    </bean>
+                </entry>
+            </map>
+        </property>
+    </bean>
+
+    <alias name="defaultFunctionJsonService" alias="functionJsonService"/>
+    <bean id="defaultFunctionJsonService"
+          class="de.hybris.bafar.core.addressSearchAgainstStoreCoverage.impl.DefaultFunctionJsonService"/>
+
+    <alias name="defaultFunctionSoapService" alias="functionSoapService"/>
+    <bean id="defaultFunctionSoapService" class="de.hybris.bafar.core.billing.impl.DefaultFunctionSoapService"/>
+
+    <!--Custom-->
+    <bean id="dropDownProcesoPreparacionConfigurationHandler"
+          class="de.hybris.bafar.core.order.hook.DropDownProcesoPreparacionConfigurationHandler"/>
+
+    <alias name="defaultUsoComprobanteFiscalDAO" alias="usoComprobanteFiscalDAO"/>
+    <bean id="defaultUsoComprobanteFiscalDAO"
+          class="de.hybris.bafar.core.usocfdi.dao.impl.DefaultUsoComprobanteFiscalDAO"/>
+
+
+    <alias name="defaultCustomerAccountDao" alias="customerAccountDao"/>
+    <bean id="defaultCustomerAccountDao"
+          class="de.hybris.bafar.core.customer.dao.impl.CustomDefaultCustomerAccountDao"
+          parent="abstractItemDao">
+        <property name="pagedFlexibleSearchService" ref="pagedFlexibleSearchService"/>
+    </bean>
+
+    <!--alias alias="commercePaymentAuthorizationStrategy" name="defaultPaymentAuthorizationStrategy"/>
+    <bean id="defaultPaymentAuthorizationStrategy"
+          class="de.hybris.bafar.core.order.hook.impl.CustomDefaultCommercePaymentAuthorizationStrategy">
+        <property name="generateMerchantTransactionCodeStrategy" ref="generateMerchantTransactionCodeStrategy"/>
+        <property name="modelService" ref="modelService"/>
+        <property name="i18nService" ref="i18nService"/>
+        <property name="paymentService" ref="paymentService"/>
+        <property name="authorizePaymentHooks" ref="authorizePaymentHooks"/>
+        <property name="configurationService" ref="configurationService"/>
+
+    </bean-->
+
+    <alias alias="commercePlaceOrderStrategy" name="defaultCommercePlaceOrderStrategy"/>
+    <bean id="defaultCommercePlaceOrderStrategy"
+          class="de.hybris.bafar.core.order.hook.impl.CustomDefaultCommercePlaceOrderStrategy">
+        <property name="paymentService" ref="paymentService"/>
+        <property name="modelService" ref="modelService"/>
+        <property name="commonI18NService" ref="commonI18NService"/>
+        <property name="deliveryService" ref="deliveryService"/>
+        <property name="orderService" ref="orderService"/>
+        <property name="baseSiteService" ref="baseSiteService"/>
+        <property name="baseStoreService" ref="baseStoreService"/>
+        <property name="promotionsService" ref="promotionsService"/>
+        <property name="calculationService" ref="calculationService"/>
+        <property name="externalTaxesService" ref="externalTaxesService"/>
+        <property name="commercePlaceOrderMethodHooks" ref="commercePlaceOrderMethodHooks"/>
+        <property name="configurationService" ref="configurationService"/>
+        <property name="timeService" ref="timeService" />
+        <property name="usoComprobanteFiscalDAO" ref="usoComprobanteFiscalDAO"/>
+        <property name="orderReplicationService" ref="defaultOrderReplicationService"/>
+    </bean>
+
+    <alias name="defaultAbstractCommerceCartStrategy" alias="bafarAbstractCommerceCartStrategy"/>
+    <bean id="defaultAbstractCommerceCartStrategy"
+          class="de.hybris.bafar.core.order.impl.BafarAbstractCommerceCartStrategy" abstract="true">
+        <property name="productService" ref="productService"/>
+        <property name="cartService" ref="cartService"/>
+        <property name="modelService" ref="modelService"/>
+        <property name="baseStoreService" ref="baseStoreService"/>
+        <property name="commerceStockService" ref="bafarCommerceStockService"/>
+        <property name="entryOrderChecker" ref="commerceOrderEntryModifiableChecker"/>
+        <property name="cartEntryDao" ref="cartEntryDao"/>
+        <property name="commerceCartCalculationStrategy" ref="checkoutCartCalculationStrategy"/>
+    </bean>
+
+
+    <alias name="defaultCartValidationStrategy" alias="cartValidationStrategy"/>
+    <bean id="defaultCartValidationStrategy"
+          class="de.hybris.platform.commerceservices.strategies.impl.DefaultCartValidationStrategy">
+        <property name="modelService" ref="modelService"/>
+        <property name="cartService" ref="cartService"/>
+        <property name="productService" ref="productService"/>
+        <property name="commerceStockService" ref="bafarCommerceStockService"/>
+        <property name="baseStoreService" ref="baseStoreService"/>
+        <property name="userService" ref="userService"/>
+        <property name="configurationService" ref="configurationService"/>
+        <property name="cartValidationHooks" ref="cartValidationHooks"/>
+    </bean>
+
+
+    <alias alias="cartValidationStrategy" name="bafarCartValidationStrategy"/>
+    <bean id="bafarCartValidationStrategy"
+          class="de.hybris.bafar.core.order.strategies.impl.BafarCartValidationStrategyImpl"
+          parent="defaultCartValidationStrategy">
+        <property name="commerceStockService" ref="bafarCommerceStockServiceReorder"/>
+    </bean>
+
+    <!--alias alias="bafarCommerceStockService" name="bafarCommerceStockService"/>
+    <bean id="bafarCommerceStockService"
+          class="de.hybris.bafar.core.stock.impl.BafarCommerceStockServiceImpl">
+        <property name="bafarStockService" ref="bafarStockService"/>
+        <property name="warehouseSelectionStrategy" ref="warehouseSelectionStrategy"/>
+        <property name="stockLevelProductStrategy" ref="stockLevelProductID"/>
+        <property name="bafarStockLevelStatusStrategy" ref="bafarStockLevelStatusStrategy"/>
+        <property name="bafarCommerceAvailabilityCalculationStrategy" ref="bafarCommerceAvailabilityCalculationStrategy"/>
+        <property name="bafarStorePickupDao" ref="bafarStorePickupDao"/>
+    </bean-->
+
+    <alias alias="bafarCommerceStockService" name="bafarCommerceStockServiceReorder"/>
+    <bean id="bafarCommerceStockServiceReorder"
+          class="de.hybris.bafar.core.order.strategies.impl.BafarCommerceStockServiceImplReorder">
+        <property name="bafarStockService" ref="bafarStockService"/>
+        <property name="warehouseSelectionStrategy" ref="warehouseSelectionStrategy"/>
+        <property name="stockLevelProductStrategy" ref="stockLevelProductID"/>
+        <property name="bafarStockLevelStatusStrategy" ref="bafarStockLevelStatusStrategy"/>
+        <property name="bafarCommerceAvailabilityCalculationStrategy" ref="bafarCommerceAvailabilityCalculationStrategy"/>
+        <property name="bafarStorePickupDao" ref="bafarStorePickupDao"/>
+    </bean>
+
+    <!--Manuel Romero, inicio:-->
+    <!--Business Type Info Service-->
+    <alias name="defaultBusinessTypeInfoDao" alias="businessTypeInfoDao"/>
+    <bean id="defaultBusinessTypeInfoDao"
+          class="de.hybris.bafar.core.businesstypeinfo.daos.impl.DefaultBusinessTypeInfoDao"/>
+
+    <alias name="defaultBusinessTypeInfoService" alias="businessTypeInfoService"/>
+    <bean id="defaultBusinessTypeInfoService"
+          class="de.hybris.bafar.core.businesstypeinfo.impl.DefaultBusinessTypeInfoService">
+        <property name="businessTypeInfoDao" ref="businessTypeInfoDao"/>
+    </bean>
+    <!--Business Type Info Service-->
+
+    <!--Town Service-->
+    <alias name="defaultTownDao" alias="townDao"/>
+    <bean id="defaultTownDao" class="de.hybris.bafar.core.town.daos.impl.DefaultTownDao"/>
+<!--    <bean id="defaultTownDao" class="de.hybris.bafar.core.town.daos.impl.DefaultTownDao" parent="abstractItemDao">-->
+<!--        &lt;!&ndash;<property name="flexibleSearchService" ref="flexibleSearchService"/>&ndash;&gt;-->
+<!--    </bean>-->
+
+    <alias name="defaultTownService" alias="townService"/>
+    <bean id="defaultTownService" class="de.hybris.bafar.core.town.impl.DefaultTownService">
+        <property name="townDao" ref="townDao"/>
+    </bean>
+    <!--Town Service-->
+
+    <!--ProductC4C-->
+    <!--<alias name="defaultProductC4CDao" alias="productC4CDao"/>
+    <bean id="defaultProductC4CDao" class="de.hybris.bafar.core.product.daos.impl.DefaultProductC4CDao"/>-->
+    <!--<bean id="defaultProductC4CDao" class="de.hybris.bafar.core.product.daos.impl.DefaultProductC4CDao" parent="abstractItemDao"/>-->
+
+<!--    <alias name="defaultProductC4CService" alias="productC4CService"/>-->
+<!--    <bean id="defaultProductC4CService" class="de.hybris.bafar.core.product.impl.DefaultProductC4CService">-->
+<!--        &lt;!&ndash;<property name="productC4CDao" ref="productC4CDao"/>&ndash;&gt;-->
+<!--        &lt;!&ndash;<property name="productService" ref="ProductService"/>&ndash;&gt;-->
+<!--    </bean>-->
+
+    <alias name="defaultB2BUnitService" alias="b2BUnitService"/>
+    <bean id="defaultB2BUnitService" class="de.hybris.platform.b2b.services.impl.DefaultB2BUnitService">
+        <property name="b2bUnitDao" ref="b2bUnitDao"/>
+        <property name="modelService" ref="modelService"/>
+        <property name="sessionService" ref="sessionService"/>
+        <property name="userService" ref="userService"/>
+        <property name="principalGroupMembersDao" ref="principalGroupMembersDao"/>
+        <property name="processDefinitionFactory" ref="processDefinitionFactory"/>
+        <property name="configurationService" ref="configurationService"/>
+        <property name="searchRestrictionService" ref="searchRestrictionService"/>
+        <property name="typeService" ref="typeService"/>
+    </bean>
+    <!--ProductC4C-->
+
+    <!--User Role Service-->
+    <alias name="defaultUserRoleDao" alias="userRoleDao"/>
+    <bean id="defaultUserRoleDao"
+          class="de.hybris.bafar.core.customer.dao.impl.DefaultUserRoleDAO">
+        <constructor-arg value="UserRole"/>
+    </bean>
+
+    <alias name="defaultUserRoleService" alias="userRoleService"/>
+    <bean id="defaultUserRoleService" class="de.hybris.bafar.core.customer.impl.DefaultUserRoleService"
+          parent="abstractBusinessService">
+        <property name="userRoleDao" ref="userRoleDao"/>
+    </bean>
+    <!--User Role Service-->
+
+    <!--C4C Order Service-->
+    <alias name="defaultC4COrderService" alias="c4cOrderService"/>
+    <bean id="defaultC4COrderService"
+          class="de.hybris.bafar.service.c4corder.impl.DefaultC4COrderService"/>
+    <!--C4C Order Service-->
+
+    <!--Order Replication Service-->
+    <alias name="defaultOrderReplicationService" alias="orderReplicationService"/>
+    <bean id="defaultOrderReplicationService"
+          class="de.hybris.bafar.core.order.impl.DefaultOrderReplicationService" />
+    <!--Order Replication Service-->
+
+    <alias name="defaultCommerceMetodoPagoStrategy" alias="commerceMetodoPagoStrategy"/>
+    <bean id="defaultCommerceMetodoPagoStrategy"
+          class="de.hybris.bafar.core.order.impl.DefaultCommerceMetodoPagoStrategy">
+        <property name="modelService" ref="modelService"/>
+    </bean>
+
+    <alias name="defaultCommerceMetodoPagoValidationStrategy" alias="commerceMetodoPagoValidationStrategy"/>
+    <bean id="defaultCommerceMetodoPagoValidationStrategy"
+          class="de.hybris.bafar.core.order.impl.DefaultCommerceMetodoPagoValidationStrategy">
+        <property name="modelService" ref="modelService"/>
+        <property name="metodoPagoService" ref="metodoPagoService"/>
+    </bean>
+
+    <!--Manuel Romero: fin-->
+
+    <alias name="defaultBafarDeliveryAddressesLookupStrategy" alias="deliveryAddressesLookupStrategy"/>
+    <bean id="defaultBafarDeliveryAddressesLookupStrategy" parent="defaultDeliveryAddressesLookupStrategy"
+          class="de.hybris.bafar.core.strategies.impl.DefaultBafarDeliveryAddressesLookupStrategy"/>
+
+          
+          
+
+    
+     <util:map id="ymktClickStreamInteractionTypeMappingBafar" key-type="java.lang.String" value-type="java.lang.String">
+		<entry key="ProductReviewsViewEvent" value="PROD_REVIEW_VIEW" />
+		<entry key="CartAbandonedEvent" value="SHOP_CART_ABANDONED" />
+		<entry key="CartViewEvent" value="SHOP_CART_VIEW" />
+		<entry key="ProceedToCheckoutEvent" value="SHOP_CHECKOUT_START" />
+		<entry key="SuccessfulCheckoutEvent" value="SHOP_CHECKOUT_SUCCES" />
+		<entry key="AddToCartEvent" value="SHOP_ITEM_ADD" />
+		<entry key="RemoveFromCartEvent" value="SHOP_ITEM_REMOVE" />
+		<entry key="ProductDetailPageViewEvent" value="SHOP_ITEM_VIEW" />
+	</util:map>
+
+	<bean id="ymktClickStreamServiceBafar" class="de.hybris.bafar.core.event.clickstream.service.ClickStreamService">
+		 <property name="ODataService" ref="ODataService_CUAN_IMPORT_SRV" />
+		<!--<property name="productURLService" ref="ymktProductURLServiceBafar" /> -->
+		<property name="interactionTypeMapping" ref="ymktClickStreamInteractionTypeMappingBafar" />
+		<!-- <property name="linkAnonymousAndLoggedInUsers" value="#{configurationService.configuration.getProperty('sapymktclickstream.service.user.linkAnonymousToLoggedIn')}" />
+	 -->
+	</bean>
+
+	<util:list id="ymktClickStreamAllowedEventsBafar" value-type="java.lang.String">
+		<value>AddToCartEvent</value>
+		<value>RemoveFromCartEvent</value>
+		<value>SuccessfulCheckoutEvent</value>
+		<value>ProductDetailPageViewEvent</value>
+		<value>ProductReviewsViewEvent</value>
+		<value>CartViewEvent</value>
+	</util:list>
+
+   <bean id="ymktConsentServiceBafar" class="de.hybris.bafar.core.event.clickstream.common.impl.DefaultYmktConsentService" />
+
+   <bean id="ymktClickStreamListenerBafar" class="de.hybris.bafar.core.event.clickstream.listener.BafarClickStreamListener" parent="abstractEventListener">
+      	<property name="allowedEvents" ref="ymktClickStreamAllowedEventsBafar" />
+     	
+      	<property name="batchSize" value="#{configurationService.configuration.getProperty('sapymktclickstream.listener.events.batchSize')}" />
+      	<property name="clickStreamService" ref="ymktClickStreamServiceBafar" />
+      	<property name="flexibleSearchService" ref="flexibleSearchService" />      
+		<property name="ymktConsentServiceBafar" ref="ymktConsentServiceBafar" />
+	</bean>
+	
+
+
+
+    <alias name="defaultBafarFacetSearchStrategy" alias="defaultFacetSearchStrategy"/>
+    <bean id="defaultBafarFacetSearchStrategy" class="de.hybris.bafar.core.search.solrfacetsearch.BafarDefaultFacetSearchStrategy"
+          parent="abstractFacetSearchStrategy">
+        <property name="solrSearchProviderFactory" ref="solrSearchProviderFactory" />
+        <property name="facetSearchContextFactory" ref="facetSearchContextFactory" />
+        <property name="facetSearchQueryConverter" ref="facetSearchQueryConverter" />
+        <property name="facetSearchResultConverter" ref="facetSearchResultConverter" />
+        <property name="solrIndexService" ref="solrIndexService" />
+    </bean>
+
+    <alias name="bafarCommerceCartCalculationStrategy" alias="checkoutCartCalculationStrategy"/>
+    <bean id="bafarCommerceCartCalculationStrategy" parent="defaultCheckoutCartCalculationStrategy"
+          class="de.hybris.bafar.core.order.impl.BafarCommerceCartCalculationStrategy">
+    </bean>
+
+    <alias name="bafarCommerceCartRestorationStrategy" alias="commerceCartRestorationStrategy"/>
+    <bean id="bafarCommerceCartRestorationStrategy"
+          class="de.hybris.bafar.core.order.impl.BafarCommerceCartRestorationStrategy"
+          parent="defaultCommerceCartRestorationStrategy">
+    </bean>
+
+</beans>

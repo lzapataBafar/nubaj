@@ -1,0 +1,2132 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+ [y] hybris Platform
+
+ Copyright (c) 2018 SAP SE or an SAP affiliate company.  All rights reserved.
+
+ This software is the confidential and proprietary information of SAP
+ ("Confidential Information"). You shall not disclose such Confidential
+ Information and shall use it only in accordance with the terms of the
+ license agreement you entered into with SAP.
+-->
+<items xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="items.xsd">
+    <atomictypes>
+        <atomictype class="java.time.LocalTime" extends="java.lang.Object" autocreate="true" generate="false"/>
+    </atomictypes>
+
+
+    <collectiontypes>
+        <collectiontype code="GenderList" elementtype="Gender" autocreate="true" generate="true" type="list"/>
+        <collectiontype code="SwatchColorSet" elementtype="SwatchColorEnum" autocreate="true" generate="true"
+                        type="set"/>
+        <!--collectiontype code="MunicipalityCollection" elementtype="MunicipalityDAO" autocreate="true" generate="false"/-->
+        <collectiontype code="BusinessTypeList" elementtype="java.lang.String" autocreate="true" generate="true" type="list"/>
+                
+        <collectiontype code="MediaLoyaltyList" elementtype="Media" autocreate="true" generate="true" type="list" />
+        
+    </collectiontypes>
+
+    <enumtypes>
+        <enumtype generate="true" code="SwatchColorEnum" autocreate="true" dynamic="true">
+            <value code="BLACK"/>
+            <value code="BLUE"/>
+            <value code="BROWN"/>
+            <value code="GREEN"/>
+            <value code="GREY"/>
+            <value code="ORANGE"/>
+            <value code="PINK"/>
+            <value code="PURPLE"/>
+            <value code="RED"/>
+            <value code="SILVER"/>
+            <value code="WHITE"/>
+            <value code="YELLOW"/>
+        </enumtype>
+
+        <enumtype code="ConfiguratorType" generate="true" autocreate="false" dynamic="true">
+            <value code="CHECKBOX"/>
+            <value code="DROPDOWN"/>
+        </enumtype>
+
+        <enumtype code="CreditCardType" autocreate="false" generate="false">
+            <value code="carnet"/>
+        </enumtype>
+
+        <enumtype generate="false" code="PaymentStatus" autocreate="false">
+            <value code="RETAINED"/>
+            <value code="CANCELLED"/>
+        </enumtype>
+
+        <enumtype code="PhoneCountryCodeType" generate="true" autocreate="true">
+            <description>International Phone Codes</description>
+            <value code="MX"/>
+            <value code="US"/> <!--Manuel Romero, 22.11.2019, valor anterior: "USA"-->
+        </enumtype>
+
+    </enumtypes>
+
+
+    <!--
+        ###################################################
+        TIPO-RELACION CONTADOR
+        CUSTOMERGENDER                  20002
+        BAFARREGISTRATION               20001
+        BUSINESSTYPE(giro del negocio)  20100
+        TOWNS(municipios)               20101
+        CUSTOMERC4C                     30525 (bafarservices-items.xml)
+        MUNICIPALITY                    30501
+        PROCESOPREPARACION              30502
+        PROCESOPREPARACION2PRODUCTREL   30503
+        B2BUNIT2PRODUCTREL              30505
+        USOCOMPROBANTE                  30506
+        MERCHANTID                      30508
+        CLIENTREDENTIAL                 30509
+        CUSTOMEROPENPAY                 30510
+        CARDOPENPAY                     30511
+        REFUNDOPENPAY                   30512
+        TRANSACTIONOPENPAY              30513
+        CHARGEOPENPAY                   30515
+        FEEOPENPAY                      30516
+        METODOENTREGA                   30517
+        METODOPAGO                      30518
+        CANALVENTA                      30519
+        ROLECODE(Deprecated and deleted)30520
+        INVOICE                         30521
+        USERROLE                        30522
+        ORGVENTA                        30523
+        HORARIOENTREGA                  30524
+        ###################################################
+    -->
+
+
+    <relations>
+
+
+        <!--Product Type Relations-->
+
+        <relation code="B2BUnit2ProductRel" localized="false" generate="true" autocreate="true">
+            <deployment table="B2BUnit2ProductRel" typecode="30505"/>
+            <sourceElement type="B2BUnit" qualifier="b2bUnit" cardinality="many" ordered="true" collectiontype="list">
+                <description>B2B Units</description>
+                <modifiers read="true" write="true" search="true" optional="true"/>
+            </sourceElement>
+            <targetElement type="Product" qualifier="products" cardinality="many" ordered="false">
+                <description>Products</description>
+                <modifiers read="true" write="true" search="true" optional="true"/>
+            </targetElement>
+        </relation>
+
+        <relation code="ProcesoPreparacion2ProductRel" localized="false" generate="true" autocreate="true">
+            <deployment table="ProPrep2ProductRel" typecode="30503"/>
+            <sourceElement type="ProcesoPreparacion" qualifier="procesosPreparacion" cardinality="many" ordered="true" collectiontype="list">
+                <description>Proceso Preparacion del Producto</description>
+                <modifiers read="true" write="true" search="true" optional="true"/>
+            </sourceElement>
+            <targetElement type="Product" qualifier="products" cardinality="many" ordered="false">
+                <description>Products</description>
+                <modifiers read="true" write="true" search="true" optional="true"/>
+            </targetElement>
+        </relation>
+
+        <!--<relation code="PointOfService2ProductRel" localized="false"-->
+        <!--generate="true" autocreate="true">-->
+        <!--<deployment table="POS2ProductRel" typecode="30504"/>-->
+        <!--<sourceElement type="PointOfService" qualifier="pointOfService" cardinality="many" ordered="true" collectiontype="list">-->
+        <!--<description>Product Point of Services</description>-->
+        <!--<modifiers read="true" write="true" search="true" optional="true"/>-->
+        <!--</sourceElement>-->
+        <!--<targetElement type="Product" qualifier="products" cardinality="many" ordered="false">-->
+        <!--<description>Products</description>-->
+        <!--<modifiers read="true" write="true" search="true" optional="true"/>-->
+        <!--</targetElement>-->
+        <!--</relation>-->
+
+
+        <!-- Creación de relacion Region con municipios de uno a muchos -->
+        <relation code="Region2MunicipalityRelation" generate="true" localized="false" autocreate="true">
+            <sourceElement type="Region" qualifier="region" cardinality="one">
+                <modifiers read="true" write="true" search="true" optional="false" unique="true"/>
+            </sourceElement>
+            <targetElement type="Municipality" qualifier="municipalities" cardinality="many">
+                <modifiers read="true" write="true" search="true" partof="true"/>
+            </targetElement>
+        </relation>
+        <!-- Creación de relacion Region con municipios de uno a muchos -->
+
+        <!--Manuel Romero, 19.11.2019: inicio-->
+        <!--Relación Region-Municipios (Region-Towns)-->
+        <relation code="Region2TownRelation" localized="false" autocreate="true">
+            <sourceElement type="Region" qualifier="region" cardinality="one">
+                <modifiers read="true" write="true" search="true" optional="false" unique="true"/>
+            </sourceElement>
+            <targetElement type="Town" qualifier="towns" cardinality="many">
+                <modifiers read="true" write="true" search="true" partof="true"/>
+            </targetElement>
+        </relation>
+        <!--Relación Region-Municipios (Region-Towns)-->
+        <!--Relación Town-PointOfService-->
+        <relation code="PointOfService2TownRelation" localized="false" autocreate="true">
+            <sourceElement type="Town" qualifier="townCode" cardinality="one">
+                <modifiers read="true" write="true" search="true" optional="false" unique="true"/>
+            </sourceElement>
+            <targetElement type="PointOfService" qualifier="pointofservice" cardinality="many">
+                <modifiers read="true" write="true" search="true" partof="true"/>
+            </targetElement>
+        </relation>
+        <!--Relación Town-PointOfService-->
+        <!--Manuel Romero, 19.11.2019: fin-->
+
+        <!--Relation 1-1 between B2B Unit and Warehouse-->
+        <relation code="B2BUnit2WarehouseRel" localized="false" generate="true" autocreate="true">
+            <sourceElement type="Warehouse" qualifier="warehouses" cardinality="many" collectiontype="list">
+                <description>B2B Unit</description>
+                <modifiers read="true" write="true" search="true" optional="true"/>
+            </sourceElement>
+            <targetElement type="B2BUnit" qualifier="b2bUnit" cardinality="one">
+                <description>B2B Unit</description>
+                <modifiers read="true" write="true" search="true" optional="true"/>
+            </targetElement>
+        </relation>
+
+        <relation code="TransactionOpenPay2ChargeOpenPay" generate="true" localized="false" autocreate="true">
+            <sourceElement type="TransactionOpenPay" qualifier="transactionOpenPay" cardinality="one">
+                <description>Payment transaction relation to transaction OpenPay</description>
+            </sourceElement>
+            <targetElement type="ChargeOpenPay" qualifier="chargesOpenPay" cardinality="many" collectiontype="list">
+                <modifiers read="true" write="true" optional="true" partof="true"/>
+            </targetElement>
+        </relation>
+
+        <relation code="TransactionOpenPayRefund2ChargeOpenPayRefunds" generate="true" localized="false" autocreate="true">
+            <sourceElement type="TransactionOpenPay" qualifier="transactionOpenPayRefund" cardinality="one">
+                <description>Payment transaction relation to transaction OpenPay</description>
+            </sourceElement>
+            <targetElement type="ChargeOpenPayRefund" qualifier="chargeOpenPayRefunds" cardinality="many" collectiontype="list">
+                <modifiers read="true" write="true" optional="true" partof="true"/>
+            </targetElement>
+        </relation>
+
+        <relation code="ChargeOpenPayRefund2RefundsOpenPay" generate="true" localized="false" autocreate="true">
+            <sourceElement type="ChargeOpenPayRefund" qualifier="chargeOpenPayRefund" cardinality="one">
+                <description>Relationship refunds</description>
+            </sourceElement>
+            <targetElement type="RefundOpenPay" qualifier="refundsOpenPay" cardinality="many"
+                           collectiontype="list">
+                <modifiers read="true" write="true" search="true" partof="true"/>
+            </targetElement>
+        </relation>
+
+        <relation code="Order2PaymentTransactionOpenPay" generate="true" localized="false"
+                  autocreate="true">
+            <sourceElement type="AbstractOrder" qualifier="abstractOrder" cardinality="one">
+                <description>Order relation to transaction OpenPay</description>
+            </sourceElement>
+            <targetElement type="TransactionOpenPay" qualifier="transactionOpenPay" cardinality="many"
+                           collectiontype="list">
+                <description>Order relation to transaction OpenPay</description>
+                <modifiers read="true" write="true" search="true" partof="true"/>
+            </targetElement>
+        </relation>
+
+        <relation code="ClientAPICredential2MerchantIDs" generate="true" localized="false" autocreate="true">
+            <sourceElement type="ClientAPICredential" qualifier="clientAPICredential" cardinality="one">
+                <description>Relationship refunds</description>
+            </sourceElement>
+            <targetElement type="MerchantID" qualifier="merchantIDs" cardinality="many" collectiontype="list">
+                <modifiers read="true" write="true" search="true" partof="true"/>
+            </targetElement>
+        </relation>
+
+        <relation code="RedemptiondRelationDetail" generate="true" localized="false" autocreate="true">
+            <sourceElement type="RedemptionOfPoint" qualifier="redemptionOfPoint" cardinality="one">
+                <description>Relationship refunds</description>
+            </sourceElement>
+            <targetElement type="RedemptionOfPointDetail" qualifier="redemptionOfPointDetail" cardinality="many" collectiontype="list">
+                <modifiers read="true" write="true" search="true" partof="true"/>
+            </targetElement>
+        </relation>
+
+    </relations>
+
+    <itemtypes>
+
+        <!-- Add your item definitions here -->
+        <typegroup name="Bafar">
+
+            <!-- Manuel Romero 24.10.2019 -->
+            <itemtype code="BusinessTypeInfo" generate="true" autocreate="true"> <!--por default se extiende como GenericItem-->
+                <description>Business Type Information</description>
+                <deployment table="BusinessTypeInfo" typecode="20100"/>
+                <attributes>
+                    <attribute qualifier="businessTypeCode" type="java.lang.String">
+                        <description>Business Type Code</description>
+                        <persistence type="property"/>
+                        <modifiers optional="false" read="true" search="true" unique="true" write="true"
+                                   initial="true"/>
+                    </attribute>
+                    <attribute qualifier="businessTypeText" type="localized:java.lang.String">
+                        <description>Business Type Description</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" search="true" write="true"/>
+                    </attribute>
+                </attributes>
+                <indexes>
+                    <index name="businessTypeCodeIndex">
+                        <key attribute="businessTypeCode"/>
+                    </index>
+                </indexes>
+            </itemtype>
+
+            <!-- Manuel Romero 24.10.2019 -->
+
+            <itemtype code="PhoneContactInfo" generate="false" autocreate="false">
+                <description>Phone contact info.</description>
+                <attributes>
+                    <attribute qualifier="countryCode" type="PhoneCountryCodeType">
+                        <persistence type="property"/>
+                        <modifiers optional="false" initial="true" write="true"/>
+                    </attribute>
+                </attributes>
+            </itemtype>
+
+            <itemtype code="UsoComprobanteFiscal" autocreate="true" generate="true" extends="GenericItem">
+                <deployment table="UsoComprobanteFiscal" typecode="30506"/>
+                <attributes>
+                    <attribute autocreate="true" qualifier="code" type="java.lang.String" generate="true">
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" initial="true" optional="false"
+                                   unique="true"/>
+                        <custom-properties>
+                            <property name="hmcIndexField">
+                                <value>"thefield"</value>
+                            </property>
+                        </custom-properties>
+                    </attribute>
+                    <attribute qualifier="name" type="java.lang.String">
+                        <description>Proofing Use Name</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="false" initial="true"/>
+                    </attribute>
+                    <attribute qualifier="displayName" type="localized:java.lang.String">
+                        <description>Proofing Use Display Name</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                </attributes>
+            </itemtype>
+
+            <itemtype code="ProcesoPreparacion" autocreate="true" generate="true" extends="GenericItem">
+                <deployment table="ProcesoPreparacion" typecode="30502"/>
+                <attributes>
+                    <attribute autocreate="true" qualifier="code" type="java.lang.String" generate="true">
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" initial="true" optional="false" unique="true"/>
+                        <custom-properties>
+                            <property name="hmcIndexField">
+                                <value>"thefield"</value>
+                            </property>
+                        </custom-properties>
+                    </attribute>
+                    <attribute qualifier="name" type="java.lang.String">
+                        <description>Preparation Process Name</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="false" initial="true"/>
+                    </attribute>
+                    <attribute qualifier="displayName" type="localized:java.lang.String">
+                        <description>Preparation Process Display Name</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                </attributes>
+            </itemtype>
+
+            <!-- Creación de tipo Municipios -->
+            <itemtype generate="true" code="Municipality" autocreate="true">
+                <deployment table="Municipalities" typecode="30501"/>
+                <attributes>
+                    <attribute autocreate="true" qualifier="region" type="Region">
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="false" unique="true"
+                                   initial="true"/>
+                    </attribute>
+                    <attribute qualifier="code" type="java.lang.String">
+                        <description>Code or key id of municipality</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="false" unique="true"
+                                   initial="true"/>
+                    </attribute>
+                    <attribute qualifier="municipality" type="java.lang.String">
+                        <description>Name of the municipality</description>
+                        <persistence type="property"/>
+                    </attribute>
+                    <attribute qualifier="longitude" type="java.lang.Double">
+                        <description>Longitude of the municipality</description>
+                        <persistence type="property"/>
+                    </attribute>
+                    <attribute qualifier="latitude" type="java.lang.Double">
+                        <description>Latitude of the municipality</description>
+                        <persistence type="property"/>
+                    </attribute>
+                    <attribute qualifier="isocode_region" type="java.lang.String">
+                        <description>ISO code of the region</description>
+                        <persistence type="property"/>
+                    </attribute>
+                </attributes>
+                <indexes>
+                    <index name="Municipality_Region">
+                        <key attribute="region"/>
+                    </index>
+                </indexes>
+            </itemtype>
+            <!-- Creación de tipo Municipios -->
+
+            <!--Manuel Romero, 19.11.2019: inicio-->
+            <!--Creación de Municipios (Towns) con relación a Regiones-->
+            <itemtype code="Town" autocreate="true" generate="true">
+                <description>Towns (Municipality) table</description>
+                <deployment table="Towns" typecode="20101"/>
+                <attributes>
+                    <attribute qualifier="region" type="Region">
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="false" unique="true"
+                                   initial="true"/>
+                    </attribute>
+                    <attribute qualifier="townCode" type="java.lang.String">
+                        <description>ID Town</description>
+                        <persistence type="property"/>
+                        <modifiers optional="false" read="true" search="true" write="true" unique="true"
+                                   initial="true"/>
+                    </attribute>
+                    <attribute qualifier="townText" type="localized:java.lang.String">
+                        <description>Town Name</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" search="true" write="true"/>
+                    </attribute>
+                </attributes>
+                <indexes>
+                    <index name="Town_Region">
+                        <key attribute="region"/>
+                    </index>
+                </indexes>
+            </itemtype>
+            <!--Creación de Municipios (Towns) con relación a Regiones-->
+
+            <!--Manuel Romero, 19.11.2019: fin-->
+
+            <!--Creación de tipo API-->
+            <itemtype code="MerchantID" autocreate="true" generate="true" extends="GenericItem">
+                <deployment table="merchantID" typecode="30508"/>
+                <attributes>
+                    <attribute autocreate="true" qualifier="clientAPICredential" type="ClientAPICredential">
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="false" unique="true"
+                                   initial="true"/>
+                    </attribute>
+                    <attribute qualifier="groupName" type="java.lang.String">
+                        <description>Group Name</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="merchantId" type="java.lang.String">
+                        <description>merchantId</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                </attributes>
+                <indexes>
+                    <index name="MerchantID_ClientAPICredential">
+                        <key attribute="clientAPICredential"/>
+                    </index>
+                </indexes>
+            </itemtype>
+
+            <itemtype code="ClientAPICredential" autocreate="true" generate="true" extends="GenericItem">
+                <deployment table="clientAPICredential" typecode="30509"/>
+                <attributes>
+                    <attribute qualifier="code" type="java.lang.String">
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="false" unique="true"
+                                   initial="true"/>
+                    </attribute>
+                    <attribute qualifier="apiName" type="java.lang.String">
+                        <description>Proofing Use Name</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="apiKey" type="java.lang.String">
+                        <description>API Key</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="publicKey" type="java.lang.String">
+                        <description>Public Key</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="privateKey" type="java.lang.String">
+                        <description>Private Key</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                </attributes>
+            </itemtype>
+            <!--Creación de tipo API-->
+
+            <!-- Creación de atributo longitud y latitud para un tipo ya existente (Region) -->
+            <itemtype code="Region" autocreate="false" generate="false">
+                <attributes>
+                    <attribute qualifier="longitude" type="java.lang.Double">
+                        <description>Longitude of the region</description>
+                        <persistence type="property"/>
+                    </attribute>
+                    <attribute qualifier="latitude" type="java.lang.Double">
+                        <description>Latitude of the region</description>
+                        <persistence type="property"/>
+                    </attribute>
+                </attributes>
+            </itemtype>
+
+            <itemtype code="B2BUnit" autocreate="false" generate="false">
+                <attributes>
+                    <attribute qualifier="openpayPublicKey" type="java.lang.String">
+                        <description>Openpay merchant public key</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="false" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="openpayPrivateKey" type="java.lang.String">
+                        <description>Openpay merchant private key</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="false" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="openpayMerchantId" type="java.lang.String">
+                        <description>Openpay merchant id</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="false" optional="true"/>
+                    </attribute>
+                </attributes>
+            </itemtype>
+        <!--Creación de atributo longitud y latitud para un tipo ya existente (Region)-->
+         <!--   Add attributes to Point Of Service type-->
+            <itemtype code="PointOfService" autocreate="false" generate="false">
+                <attributes>
+                    <!--Omitted by Manuel Romero: begin-->
+                    <!--
+                                        <attribute qualifier="region" type="java.lang.String">
+                                            <description>ISO Code Short of the region from Point Of Service</description>
+                                            <persistence type="property"></persistence>
+                                        </attribute>
+                                        <attribute qualifier="municipality" type="java.lang.String">
+                                            <description>Name of the municipality from Point Of Service</description>
+                                            <persistence type="property"></persistence>
+                                        </attribute>
+                    -->
+                    <!--Omitted by Manuel Romero: begin-->
+                    <!--Added by Manuel Romero 05.12.2019: begin-->
+                    <attribute qualifier="townCode" type="Town">
+                        <description>City/Town for Point Of Service</description>
+                        <persistence type="property"/>
+                    </attribute>
+                    <!--Added by Manuel Romero 05.12.2019: end-->
+                    <!-- Se comenta c?digo ya que no se utilizan estas variables Maria Torres 21/11/2019
+                    <attribute qualifier="zlatitude" type="java.lang.Double">
+                           <description>ZLatitude</description>
+                           <persistence type="property"></persistence>
+                       </attribute>
+                       <attribute qualifier="zlongitude" type="java.lang.Double">
+                           <description>ZLongitude</description>
+                           <persistence type="property"></persistence>
+                       </attribute> -->
+                </attributes>
+                <indexes>
+                    <index name="Pos_Town">
+                        <key attribute="townCode"/>
+                    </index>
+                </indexes>
+            </itemtype>
+
+            <itemtype code="Address" autocreate="false" generate="false">
+                <attributes>
+                    <attribute autocreate="true" qualifier="usoCfdi" type="java.lang.String">
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                        <persistence type="property"/>
+                        <custom-properties>
+                            <property name="hmcIndexField">
+                                <value>"thefield"</value>
+                            </property>
+                        </custom-properties>
+                    </attribute>
+                    <!--Manuel Romero, 05.12.2019: inicio-->
+                    <!--<attribute autocreate="true" qualifier="streetnumberint" type="java.lang.String">
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                        <persistence type="property"/>
+                        <custom-properties>
+                            <property name="hmcIndexField">
+                                <value>"thefield"</value>
+                            </property>
+                        </custom-properties>
+                    </attribute>-->
+                    <attribute qualifier="townCode" type="Town">
+                        <description>City/Town for Address</description>
+                        <persistence type="property"/>
+                    </attribute>
+                    <attribute qualifier="businessTypeCode" type="java.lang.String" > <!--Manuel Romero: 28/07/2020-->
+                        <description>Company Business Type</description>
+                        <persistence type="property"/>
+                    </attribute>
+                    <!--Manuel Romero, 05.12.2019: fin-->
+                    <attribute autocreate="true" qualifier="entity" type="java.lang.String">
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                        <persistence type="property"/>
+                        <custom-properties>
+                            <property name="hmcIndexField">
+                                <value>"thefield"</value>
+                            </property>
+                        </custom-properties>
+                    </attribute>
+                    <!--Manuel Romero: begin (nunca se llenó la estructura)-->
+<!--
+                    <attribute autocreate="true" qualifier="municipality" type="java.lang.String">
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                        <persistence type="property"/>
+                        <custom-properties>
+                            <property name="hmcIndexField">
+                                <value>"thefield"</value>
+                            </property>
+                        </custom-properties>
+                    </attribute>
+-->
+                    <!--Manuel Romero: end (nunca se llenó la estructura)-->
+                    <attribute qualifier="billToAddress" type="java.lang.Boolean">
+                        <description>billToAddress</description>
+                        <defaultvalue>Boolean.FALSE</defaultvalue>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                        <persistence type="property"/>
+                    </attribute>
+                    <attribute qualifier="previouslyBilled" type="java.lang.Boolean">
+                        <description>Invoice Creation Date</description>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                        <persistence type="property"/>
+                        <defaultvalue>java.lang.Boolean.FALSE</defaultvalue>
+                    </attribute>
+                    <!--Manuel Romero, 22.11.2019: inicio-->
+<!-- Este atributo ya existe, no olvidar meterlo en el Register
+                    <attribute qualifier="town" type="de.hybris.bafar.core.jalo.Town">
+                        <modifiers read="true" write="true" search="true" optional="false"/>
+                        <persistence type="property"/>
+                        <custom-properties>
+                            <property name="hmcIndexField">
+                                <value>"theField"</value>
+                            </property>
+                        </custom-properties>
+                    </attribute>
+-->
+                    <attribute qualifier="indoorNumber" type="java.lang.String">
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                        <persistence type="property"/>
+                    </attribute>
+                    <attribute qualifier="phoneCountryCode" type="java.lang.String">
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                        <persistence type="property"/>
+                    </attribute>
+                    <attribute qualifier="uuidDomicilio" type="java.lang.String">
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                        <persistence type="property"/>
+                    </attribute>
+                    <attribute qualifier="uuidContacto" type="java.lang.String">
+                        <description>C4C UUID Contact Person</description>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                        <persistence type="property"/>
+                    </attribute>
+                    <attribute qualifier="bpContacto" type="java.lang.String">
+                        <description>C4C Business Partner Contact Person</description>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                        <persistence type="property"/>
+                    </attribute>
+                </attributes>
+
+
+                <!--Manuel Romero, 22.11.2019: fin-->
+            </itemtype>
+
+            <itemtype code="Customer" autocreate="false" generate="false">
+                <attributes>
+                    <attribute qualifier="curp" type="java.lang.String">
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                        <persistence type="property"/>
+                    </attribute>
+                    <attribute qualifier="rfc" type="java.lang.String">
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                        <persistence type="property"/>
+                    </attribute>
+                    <attribute qualifier="persontype" type="java.lang.String">
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                        <persistence type="property"/>
+                    </attribute>
+                    <!--José Luis Freire, 04.03.2020: inicio-->
+                    <attribute qualifier="firstName" type="java.lang.String">
+                        <description>Customer First Name</description>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                        <persistence type="property"/>
+                    </attribute>
+                    <attribute qualifier="lastName" type="java.lang.String">
+                        <description>Customer Last Name</description>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                        <persistence type="property"/>
+                    </attribute>
+                    <attribute qualifier="openpayCustomerId" type="java.lang.String">
+                        <description>Openpay unique customer identifier</description>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                        <persistence type="property"/>
+                    </attribute>
+                    <!--José Luis Freire, 04.03.2020: fin-->
+                    <!--Manuel Romero, 22.11.2019: inicio-->
+                    <attribute qualifier="lastName2" type="java.lang.String">
+                        <description>Mother's last name</description>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                        <persistence type="property"/>
+                    </attribute>
+                    <!--Si es "home" o "business"-->
+                    <attribute qualifier="registerType" type="java.lang.String">
+                        <description>Allowed values: home or business</description>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                        <persistence type="property"/>
+                    </attribute>
+                    <!--Si es "home" o "business"-->
+                    <!--Términos y Condiciones, Aviso de Privacidad-->
+                    <attribute qualifier="termsCheck" type="java.lang.Boolean">
+                        <defaultvalue>java.lang.Boolean.FALSE</defaultvalue>
+                        <description>Terms and Conditions and Privacy Notice</description>
+                        <modifiers read="true" write="true" search="true" optional="false"/>
+                        <persistence type="property"/>
+                    </attribute>
+                    <!--Términos y Condiciones, Aviso de Privacidad-->
+                    <attribute qualifier="newsPromotions" type="java.lang.Boolean">
+                        <modifiers read="true" write="true" search="true" optional="false"/>
+                        <persistence type="property"/>
+                        <defaultvalue>Boolean.FALSE</defaultvalue>
+                    </attribute>
+                    <attribute qualifier="salesAgent" type="java.lang.Boolean">
+                        <modifiers read="true" write="true" search="true" optional="false"/>
+                        <persistence type="property"/>
+                        <defaultvalue>Boolean.FALSE</defaultvalue>
+                    </attribute>
+
+                    <attribute qualifier="uuidCuenta" type="java.lang.String">
+                        <description>C4C UUID Account</description>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                        <persistence type="property"/>
+                    </attribute>
+
+                    <attribute qualifier="uuidNumIdentificacion" type="java.lang.String">
+                        <description>C4C UUID Tax Id</description>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                        <persistence type="property"/>
+                    </attribute>
+
+                    <!--bpCode = idCuenta-->
+                    <!--userRole = codigoRol-->
+
+                    <!--Manuel Romero, 22.11.2019: fin-->
+                </attributes>
+            </itemtype>
+
+            <itemtype code="User" autocreate="false" generate="false">
+                <attributes>
+                    <attribute autocreate="true" qualifier="defaultBillingAddress" type="Address"
+                               isSelectionOf="addresses">
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="false" optional="true"/>
+                    </attribute>
+
+                    <attribute qualifier="userRole" type="UserRole" autocreate="true"  generate="true">
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                </attributes>
+            </itemtype>
+
+            <itemtype code="Order" autocreate="false" generate="false">
+                <attributes>
+                    <attribute qualifier="invoice" type="Invoice">
+                        <description>Invoice</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="invoiceForward" type="java.lang.Boolean">
+                        <description>invoiceForward</description>
+                        <defaultvalue>Boolean.FALSE</defaultvalue>
+                        <modifiers read="true" write="true" search="true" optional="false"/>
+                        <persistence type="property"/>
+                    </attribute>
+                    <attribute qualifier="invoiceSend" type="java.lang.Boolean">
+                        <description>invoiceSend</description>
+                        <defaultvalue>Boolean.FALSE</defaultvalue>
+                        <modifiers read="true" write="true" search="true" optional="false"/>
+                        <persistence type="property"/>
+                    </attribute>
+                </attributes>
+            </itemtype>
+
+            <itemtype code="CreditCardPaymentInfo" autocreate="false" generate="false">
+                <attributes>
+                    <attribute qualifier="cardDeviceSessionIdOpenPay" type="java.lang.String">
+                        <modifiers read="true" write="true" search="true" optional="false" initial="true"/>
+                        <persistence type="property"/>
+                    </attribute>
+                    <attribute qualifier="cardTokenIdOpenPay" type="java.lang.String">
+                        <modifiers read="true" write="true" search="true" optional="false" initial="true"/>
+                        <persistence type="property"/>
+                    </attribute>
+                    <attribute qualifier="openpayTransactionId" type="java.lang.String">
+                        <description>Unique identifier assigned by Openpay at the time of its creation.</description>
+                        <modifiers read="true" write="true" search="true" optional="true" initial="true"/>
+                        <persistence type="property"/>
+                    </attribute>
+                    <attribute qualifier="openpayAuthorizationId" type="java.lang.String">
+                        <description>Authorization number generated by the processor.</description>
+                        <modifiers read="true" write="true" search="true" optional="true" initial="true"/>
+                        <persistence type="property"/>
+                    </attribute>
+                    <attribute qualifier="openpayTransactionType" type="java.lang.String">
+                        <description>Type of transaction that was created: fee, charge, payout, transfer.</description>
+                        <modifiers read="true" write="true" search="true" optional="true" initial="true"/>
+                        <persistence type="property"/>
+                    </attribute>
+                    <attribute qualifier="openpayMethod" type="java.lang.String">
+                        <description>Type of method used in the transaction: card, bank or customer.</description>
+                        <modifiers  read="true" write="true" search="true" optional="true" initial="true"/>
+                        <persistence type="property"/>
+                    </attribute>
+                    <attribute qualifier="cvv2" type="java.lang.String">
+                        <description>Card verification security code</description>
+                        <modifiers read="true" write="true" search="false" optional="false" encrypted="true" initial="true"/>
+                        <persistence type="property"/>
+                    </attribute>
+                    <attribute qualifier="openpayCardId" type="java.lang.String">
+                        <description>Openpay unique identifier for Card</description>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                        <persistence type="property"/>
+                    </attribute>
+                </attributes>
+            </itemtype>
+            <!-- Creación de atributo maxRadiousForPickUpStore -->
+
+            <!--Add attributes to Point Of Service type-->
+            <itemtype code="BaseStore" autocreate="false" generate="false">
+                <attributes>
+                    <attribute qualifier="maxRadiousForPickUpStore" type="java.lang.Double">
+                        <description>Max radiuos Distance from Delivery Address to Point of Service Pick Up
+                        </description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="minOrderQuantity" type="java.lang.Double">
+                        <description>minimum Kg. amount of the order, is used to configure the product sales quantity
+                            selector
+                        </description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="false" optional="true"/>
+                    </attribute>
+                    <!--attribute autocreate="true" qualifier="clientAPICredential" type="java.lang.String">
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                        <persistence type="property"/>
+                        <custom-properties>
+                            <property name="hmcIndexField">
+                                <value>"thefield"</value>
+                            </property>
+                        </custom-properties>
+                    </attribute-->
+                </attributes>
+            </itemtype>
+
+            <itemtype code="Product" autocreate="false" generate="false">
+                <attributes>
+                    <attribute qualifier="conversionVenta" type="java.lang.Integer">
+                        <description>Product Sales conversion unit</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                </attributes>
+            </itemtype>
+
+            <!--OpenPayTypes-->
+            <itemtype code="CustomerOpenPay" autocreate="true" generate="true" extends="GenericItem">
+                <deployment table="customerOpenPay" typecode="30510"/>
+                <attributes>
+                    <attribute qualifier="name" type="java.lang.String">
+                        <description>Customer Name</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="last_name" type="java.lang.String">
+                        <description>Customer Last Name</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="email" type="java.lang.String">
+                        <description>Email</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="phone_number" type="java.lang.Object">
+                        <description>Phone Number</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="address" type="java.lang.Object">
+                        <description>Address</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="creation_date" type="java.util.Date">
+                        <description>Creation Date</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="external_id" type="java.lang.Object">
+                        <description>External id</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="clabe" type="java.lang.Object">
+                        <description>Clabe</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                </attributes>
+            </itemtype>
+
+            <itemtype code="CardOpenPay" autocreate="true" generate="true" extends="GenericItem">
+                <deployment table="cardOpenPay" typecode="30511"/>
+                <attributes>
+                    <attribute qualifier="type" type="java.lang.String">
+                        <description>Type Card</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="brand" type="java.lang.String">
+                        <description>Brand Card</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <!--attribute qualifier="address" type="java.lang.String">
+                        <description>Address</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute-->
+                    <attribute qualifier="card_number" type="java.lang.String">
+                        <description>Card Number</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="holder_name" type="java.lang.String">
+                        <description>Holder Name Card</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="expiration_year" type="java.lang.String">
+                        <description>Expiration Year</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="expiration_month" type="java.lang.String">
+                        <description>Expiration Month</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="allows_charges" type="java.lang.Boolean">
+                        <defaultvalue>false</defaultvalue>
+                        <description>Allows Charges</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="false"/>
+                    </attribute>
+                    <attribute qualifier="allows_payouts" type="java.lang.Boolean">
+                        <defaultvalue>false</defaultvalue>
+                        <description>Allows Payouts</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="false"/>
+                    </attribute>
+                    <attribute qualifier="bank_name" type="java.lang.String">
+                        <description>Bank Name</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="points_type" type="java.lang.String">
+                        <description>Points Type</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="bank_code" type="java.lang.String">
+                        <description>Bank Code</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="points_card" type="java.lang.Boolean">
+                        <defaultvalue>false</defaultvalue>
+                        <description>Points Card</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="false"/>
+                    </attribute>
+                </attributes>
+            </itemtype>
+
+            <itemtype code="RefundOpenPay" autocreate="true" generate="true" extends="GenericItem">
+                <deployment table="refundOpenPay" typecode="30512"/>
+                <attributes>
+                    <attribute qualifier="operation_date" type="java.util.Date">
+                        <description>Operation date</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="authorization" type="java.lang.String">
+                        <description>Authorization</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="amount" type="java.lang.Double">
+                        <description>Amount</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="operation_type" type="java.lang.String">
+                        <description>Operation type</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="method" type="java.lang.String">
+                        <description>Method</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="transaction_type" type="java.lang.String">
+                        <description>Transaction type</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="status" type="java.lang.String">
+                        <description>Status</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="conciliated" type="java.lang.Boolean">
+                        <defaultvalue>false</defaultvalue>
+                        <description>Conciliated</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="false"/>
+                    </attribute>
+                    <attribute qualifier="id" type="java.lang.String">
+                        <description>id</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="creation_date" type="java.lang.String">
+                        <description>Creation date</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="description" type="java.lang.String">
+                        <description>Description</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="customer" type="CustomerOpenPay">
+                        <description>Customer</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="currency" type="java.lang.String">
+                        <description>Currency</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="fee" type="FeeOpenPay">
+                        <description>Fee</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                </attributes>
+            </itemtype>
+
+            <itemtype code="FeeOpenPay" autocreate="true" generate="true" extends="GenericItem">
+                <deployment table="feeOpenPay" typecode="30516"/>
+                <attributes>
+                    <attribute qualifier="amount" type="java.lang.Double">
+                        <description>Amount</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="tax" type="java.lang.Double">
+                        <description>Tax</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="currency" type="java.lang.String">
+                        <description>Currency</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                </attributes>
+            </itemtype>
+
+            <itemtype code="ChargeOpenPay" autocreate="true" generate="true" extends="GenericItem">
+                <deployment table="chargeOpenPay" typecode="30515"/>
+                <attributes>
+                    <attribute autocreate="true" qualifier="tokenOPTransaction" type="java.lang.String">
+                        <description>OpenPay token of transaction</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute autocreate="true" qualifier="paymentPreAuth" type="java.lang.Boolean">
+                        <description>Pre authorized payment</description>
+                        <persistence type="property"/>
+                        <defaultvalue>false</defaultvalue>
+                        <modifiers read="true" write="true" search="true" optional="false"/>
+                    </attribute>
+                    <attribute autocreate="true" qualifier="paymentConfirm" type="java.lang.Boolean">
+                        <description>Confirm pre authorized payment</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="false"/>
+                        <defaultvalue>false</defaultvalue>
+                    </attribute>
+                    <attribute autocreate="true" qualifier="newPaymentConfirm" type="java.lang.Boolean">
+                        <description>Creation of payment again after making a refund</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="false"/>
+                        <defaultvalue>false</defaultvalue>
+                    </attribute>
+                    <attribute qualifier="id" type="java.lang.String">
+                        <description>Transaction Id</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="authorization" type="java.lang.String">
+                        <description>Authorization number</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="operation_type" type="java.lang.String">
+                        <description>Operation Type</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="method" type="java.lang.String">
+                        <description>Method</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="transaction_type" type="java.lang.String">
+                        <description>Transaction Type</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="card" type="cardOpenPay">
+                        <description>Card type open pay</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="status" type="java.lang.String">
+                        <description>status</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="conciliated" type="java.lang.Boolean">
+                        <description>Conciliated</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="false"/>
+                        <defaultvalue>false</defaultvalue>
+                    </attribute>
+                    <attribute qualifier="creation_date" type="java.util.Date">
+                        <description>Creation Date</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="operation_date" type="java.util.Date">
+                        <description>Operation Date</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="description" type="java.lang.String">
+                        <description>Description</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="error_message" type="java.lang.Object">
+                        <description>Error Message</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="order_id" type="java.lang.String">
+                        <description>Order Id</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="currency" type="java.lang.String">
+                        <description>Currency</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="amount" type="java.lang.String">
+                        <description>Amount</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="customer" type="customerOpenPay">
+                        <description>Customer</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <!--attribute qualifier="refundOpenPay" type="RefundOpenPay">
+                        <description>Refund</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="fee" type="FeeOpenPay">
+                        <description>Fee</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute-->
+                </attributes>
+            </itemtype>
+
+            <itemtype code="ChargeOpenPayRefund" extends="ChargeOpenPay" autocreate="true" generate="true">
+                <attributes>
+                    <attribute autocreate="true" qualifier="refundComplete" type="java.lang.Boolean">
+                        <description>Refund of type complete</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="false"/>
+                        <defaultvalue>false</defaultvalue>
+                    </attribute>
+                    <attribute autocreate="true" qualifier="refundPartial" type="java.lang.Boolean">
+                        <description>Refund of type partial</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="false"/>
+                        <defaultvalue>false</defaultvalue>
+                    </attribute>
+                    <attribute qualifier="refundOpenPay" type="RefundOpenPay">
+                        <description>Refund</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="feeOpenPay" type="FeeOpenPay">
+                        <description>Refund</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                </attributes>
+            </itemtype>
+
+            <itemtype code="TransactionOpenPay" autocreate="true" generate="true" extends="GenericItem">
+                <deployment table="transactionOpenPay" typecode="30513"/>
+                <attributes>
+                    <attribute qualifier="deviceSessionId" type="java.lang.String">
+                        <description>deviceSessionId</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                </attributes>
+            </itemtype>
+            <!--OpenPayTypes-->
+
+            <itemtype code="Invoice" autocreate="true" generate="true" extends="GenericItem">
+                <deployment table="invoice" typecode="30521"/>
+                <attributes>
+                    <attribute qualifier="billingAddress" type="Address">
+                        <description>Billing Address</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute autocreate="true" qualifier="usoCfdi" type="UsoComprobanteFiscal">
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                        <persistence type="property"/>
+                    </attribute>
+                    <attribute qualifier="previouslyBilled" type="java.lang.Boolean">
+                        <description>Invoice Creation Date</description>
+                        <defaultvalue>Boolean.FALSE</defaultvalue>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                        <persistence type="property"/>
+                    </attribute>
+                </attributes>
+            </itemtype>
+
+            <!--AbstractOrder-->
+            <!--AbstractOrder-->
+            <!--PaymentTransaction-->
+            <!--PaymentTransaction-->
+
+            <itemtype code="DropDownProcesoPreparacionSettings" extends="AbstractConfiguratorSetting" autocreate="true"
+                      generate="true">
+                <description>Dropdown Configurator that contains additional attributes which specify the
+                    configuration.
+                </description>
+                <attributes>
+                    <attribute qualifier="configurationLabel" type="java.lang.String">
+                        <description>Label of the dropdown element</description>
+                        <persistence type="property"/>
+                    </attribute>
+                    <attribute qualifier="procesoPreparacion" type="java.lang.String">
+                        <description>Indicates the default value of the dropdown for Preparation Process</description>
+                        <persistence type="property"/>
+                    </attribute>
+                </attributes>
+            </itemtype>
+
+            <itemtype code="DropDownProcesoPreparacionConfiguredProductInfo" extends="AbstractOrderEntryProductInfo"
+                      autocreate="true" generate="true">
+                <description>Order entry side of DropDown Proceso Preparacion Settings</description>
+                <attributes>
+                    <attribute qualifier="configurationLabel" type="java.lang.String">
+                        <description>Label</description>
+                        <persistence type="property"/>
+                    </attribute>
+                    <attribute qualifier="procesoPreparacion" type="java.lang.String">
+                        <description>Indicates the configured value of the Product Preparation Process that will be
+                            saved along with the order entry
+                        </description>
+                        <persistence type="property"/>
+                    </attribute>
+                </attributes>
+            </itemtype>
+
+            <itemtype code="AbstractOrder" autocreate="false" generate="false">
+                <attributes>
+                    <attribute qualifier="codigoAccion" type="java.lang.String" autocreate="true"  generate="true">
+                        <persistence type="property">
+                            <columntype>
+                                <value>java.lang.String</value>
+                            </columntype>
+                        </persistence>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+
+                    <attribute qualifier="tipoCodigo" type="java.lang.String" autocreate="true"  generate="true">
+                        <persistence type="property">
+                            <columntype>
+                                <value>java.lang.String</value>
+                            </columntype>
+                        </persistence>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+
+                    <attribute qualifier="orgVenta" type="OrgVenta" autocreate="true"  generate="true">
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+
+                    <attribute qualifier="canalDistribucion" type="java.lang.String" autocreate="true"  generate="true">
+                        <persistence type="property">
+                            <columntype>
+                                <value>java.lang.String</value>
+                            </columntype>
+                        </persistence>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+
+                    <attribute qualifier="metodoPago" type="MetodoPago" autocreate="true"  generate="true">
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+
+                    <attribute qualifier="metodoEntrega" type="MetodoEntrega" autocreate="true"  generate="true">
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+
+                    <attribute qualifier="canalVenta" type="CanalVenta" autocreate="true"  generate="true">
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+
+                    <attribute qualifier="horarioEntrega" type="HorarioEntrega" autocreate="true"  generate="true">
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+
+                    <attribute qualifier="fechaEntregaDeseada" type="java.util.Date" autocreate="true"  generate="true">
+                        <persistence type="property">
+                            <columntype>
+                                <value>java.util.Date</value>
+                            </columntype>
+                        </persistence>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+
+                    <attribute qualifier="idBonusBuy" type="java.lang.String" autocreate="true"  generate="true">
+                        <persistence type="property">
+                            <columntype>
+                                <value>java.lang.String</value>
+                            </columntype>
+                        </persistence>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+
+                    <attribute qualifier="puntosAcumulados" type="java.lang.Double" autocreate="true"  generate="true">
+                        <persistence type="property">
+                            <columntype>
+                                <value>java.lang.Double</value>
+                            </columntype>
+                        </persistence>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+
+                    <attribute qualifier="puntosReservados" type="java.lang.Double" autocreate="true"  generate="true">
+                        <persistence type="property">
+                            <columntype>
+                                <value>java.lang.Double</value>
+                            </columntype>
+                        </persistence>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+
+                    <attribute qualifier="valorDineroDescuento" type="java.lang.Double" autocreate="true"  generate="true">
+                        <persistence type="property">
+                            <columntype>
+                                <value>java.lang.Double</value>
+                            </columntype>
+                        </persistence>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+
+                    <attribute qualifier="phoneContactInfo" type="PhoneContactInfo" autocreate="true"  generate="true">
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <!--Manuel Romero: begin-->
+                    <attribute qualifier="c4cSapUuid" type="java.lang.String" autocreate="true" generate="true">
+                        <persistence type="property">
+                            <columntype>
+                                <value>java.lang.String</value>
+                            </columntype>
+                        </persistence>
+                        <modifiers read="true" write="true" search="true" optional="true" />
+                    </attribute>
+                    <attribute qualifier="c4cOrderId" type="java.lang.String" autocreate="true" generate="true">
+                        <persistence type="property"/>
+                        <modifiers search="true" read="true" write="true" optional="true"/>
+                    </attribute>
+                    <!--Manuel Romero: end-->
+                    <attribute qualifier="bpCode" type="java.lang.String" autocreate="true" generate="true">
+                        <persistence type="property">
+                            <columntype>
+                                <value>java.lang.String</value>
+                            </columntype>
+                        </persistence>
+                        <modifiers read="true" write="true" search="true" optional="true" />
+                    </attribute>
+                </attributes>
+            </itemtype>
+
+            <!-- Decimal Quantity Creation for Cart Entry -->
+            <itemtype code="AbstractOrderEntry" autocreate="false" generate="false">
+                <attributes>
+                    <attribute autocreate="true" qualifier="quantityDecimal" type="java.lang.Double" generate="true">
+                        <persistence type="property">
+                            <columntype>
+                                <value>java.math.BigDecimal</value>
+                            </columntype>
+                        </persistence>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+
+                    <attribute autocreate="true" qualifier="procesoPreparacion" type="ProcesoPreparacion" generate="true">
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+
+                    <attribute autocreate="true" qualifier="notaProcesoPreparacion" type="java.lang.String" generate="true">
+                        <persistence type="property">
+                            <columntype>
+                                <value>java.lang.String</value>
+                            </columntype>
+                        </persistence>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+
+                    <attribute qualifier="descuentoUnitario" type="java.lang.Double" autocreate="true"  generate="true">
+                        <persistence type="property">
+                            <columntype>
+                                <value>java.lang.Double</value>
+                            </columntype>
+                        </persistence>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+
+                    <attribute qualifier="descuentoLinea" type="java.lang.Double" autocreate="true"  generate="true">
+                        <persistence type="property">
+                            <columntype>
+                                <value>java.lang.Double</value>
+                            </columntype>
+                        </persistence>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+
+                    <attribute qualifier="totalLinea" type="java.lang.Double" autocreate="true"  generate="true">
+                        <persistence type="property">
+                            <columntype>
+                                <value>java.lang.Double</value>
+                            </columntype>
+                        </persistence>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+
+                    <attribute qualifier="idBonusBuyLinea" type="java.lang.String" autocreate="true"  generate="true">
+                        <persistence type="property">
+                            <columntype>
+                                <value>java.lang.String</value>
+                            </columntype>
+                        </persistence>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+
+                    <attribute qualifier="idCouponLinea" type="java.lang.String" autocreate="true"  generate="true">
+                        <persistence type="property">
+                            <columntype>
+                                <value>java.lang.String</value>
+                            </columntype>
+                        </persistence>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+
+                    <attribute qualifier="tipoNota" type="java.lang.String" autocreate="true"  generate="true">
+                        <persistence type="property">
+                            <columntype>
+                                <value>java.lang.String</value>
+                            </columntype>
+                        </persistence>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <!--Manuel Romero: inicio-->
+                    <attribute qualifier="c4cActionCode" type="java.lang.String" autocreate="true"  generate="true">
+                        <persistence type="property">
+                            <columntype>
+                                <value>java.lang.String</value>
+                            </columntype>
+                        </persistence>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+
+                    <attribute qualifier="c4cCancellation" type="java.lang.String" autocreate="true"  generate="true">
+                        <persistence type="property">
+                            <columntype>
+                                <value>java.lang.String</value>
+                            </columntype>
+                        </persistence>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+
+                    <attribute qualifier="c4cStatus" type="java.lang.String" autocreate="true"  generate="true">
+                        <persistence type="property">
+                            <columntype>
+                                <value>java.lang.String</value>
+                            </columntype>
+                        </persistence>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <!--Manuel Romero: fin-->
+                </attributes>
+            </itemtype>
+
+            <itemtype code="MetodoEntrega" autocreate="true" generate="true" extends="GenericItem">
+                <description>Type to enumerate delivery methods implemented by BAFAR in checkout</description>
+                <deployment table="MetodoEntrega" typecode="30517"/>
+                <attributes>
+                    <attribute autocreate="true" qualifier="code" type="java.lang.String" generate="true">
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" initial="true" optional="false"
+                                   unique="true"/>
+                        <custom-properties>
+                            <property name="hmcIndexField">
+                                <value>"thefield"</value>
+                            </property>
+                        </custom-properties>
+                    </attribute>
+                    <attribute qualifier="name" type="java.lang.String">
+                        <description>Metodo Entrega Name</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="false" initial="true"/>
+                    </attribute>
+                    <attribute qualifier="displayName" type="localized:java.lang.String">
+                        <description>Metodo Entrega Display Name</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                </attributes>
+            </itemtype>
+
+            <itemtype code="MetodoPago" autocreate="true" generate="true" extends="GenericItem">
+                <description>Type to enumerate payment methods implemented by BAFAR in checkout</description>
+                <deployment table="MetodoPago" typecode="30518"/>
+                <attributes>
+                    <attribute autocreate="true" qualifier="code" type="java.lang.String" generate="true">
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" initial="true" optional="false"
+                                   unique="true"/>
+                        <custom-properties>
+                            <property name="hmcIndexField">
+                                <value>"thefield"</value>
+                            </property>
+                        </custom-properties>
+                    </attribute>
+                    <attribute qualifier="name" type="java.lang.String">
+                        <description>Metodo Pago Name</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="false" initial="true"/>
+                    </attribute>
+                    <attribute qualifier="displayName" type="localized:java.lang.String">
+                        <description>Metodo Pago Display Name</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="enabled" type="java.lang.Boolean">
+                        <description>Metodo Pago Enabled (indicates if payment method should used by checkout)</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="false" initial="true"/>
+                    </attribute>
+                </attributes>
+            </itemtype>
+
+            <itemtype code="CanalVenta" autocreate="true" generate="true" extends="GenericItem">
+                <description>Type to enumerate canal venta implemented by BAFAR in order</description>
+                <deployment table="CanalVenta" typecode="30519"/>
+                <attributes>
+                    <attribute autocreate="true" qualifier="code" type="java.lang.String" generate="true">
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" initial="true" optional="false"
+                                   unique="true"/>
+                        <custom-properties>
+                            <property name="hmcIndexField">
+                                <value>"thefield"</value>
+                            </property>
+                        </custom-properties>
+                    </attribute>
+                    <attribute qualifier="name" type="java.lang.String">
+                        <description>Canal Venta Name</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="false" initial="true"/>
+                    </attribute>
+                    <attribute qualifier="displayName" type="localized:java.lang.String">
+                        <description>Canal Venta Display Name</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                </attributes>
+            </itemtype>
+
+            <itemtype code="UserRole" autocreate="true" generate="true" extends="GenericItem">
+                <description>Type to enumerate user role code implemented by BAFAR in order</description>
+                <deployment table="UserRole" typecode="30522"/>
+                <attributes>
+                    <attribute autocreate="true" qualifier="code" type="java.lang.String" generate="true">
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" initial="true" optional="false"
+                                   unique="true"/>
+                        <custom-properties>
+                            <property name="hmcIndexField">
+                                <value>"thefield"</value>
+                            </property>
+                        </custom-properties>
+                    </attribute>
+                    <attribute qualifier="name" type="java.lang.String">
+                        <description>Role Code Name</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="false" initial="true"/>
+                    </attribute>
+                    <attribute qualifier="displayName" type="localized:java.lang.String">
+                        <description>Role Code Display Name</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                </attributes>
+            </itemtype>
+
+            <itemtype code="OrgVenta" autocreate="true" generate="true" extends="GenericItem">
+                <description>Type to enumerate sales organization implemented by BAFAR in order</description>
+                <deployment table="OrgVenta" typecode="30523"/>
+                <attributes>
+                    <attribute autocreate="true" qualifier="code" type="java.lang.String" generate="true">
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" initial="true" optional="false"
+                                   unique="true"/>
+                        <custom-properties>
+                            <property name="hmcIndexField">
+                                <value>"thefield"</value>
+                            </property>
+                        </custom-properties>
+                    </attribute>
+                    <attribute qualifier="name" type="java.lang.String">
+                        <description>Role Code Name</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="false" initial="true"/>
+                    </attribute>
+                    <attribute qualifier="displayName" type="localized:java.lang.String">
+                        <description>Role Code Display Name</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                </attributes>
+            </itemtype>
+
+            <itemtype code="HorarioEntrega" autocreate="true" generate="true" extends="GenericItem">
+                <description>Type to enumerate delivery time implemented by BAFAR in order</description>
+                <deployment table="HorarioEntrega" typecode="30524"/>
+                <attributes>
+                    <attribute autocreate="true" qualifier="code" type="java.lang.String" generate="true">
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" initial="true" optional="false"
+                                   unique="true"/>
+                        <custom-properties>
+                            <property name="hmcIndexField">
+                                <value>"thefield"</value>
+                            </property>
+                        </custom-properties>
+                    </attribute>
+                    <attribute qualifier="name" type="java.lang.String">
+                        <description>Role Code Name</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="false" initial="true"/>
+                    </attribute>
+
+                    <attribute qualifier="displayName" type="localized:java.lang.String">
+                        <description>Role Code Display Name</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+
+                    <attribute qualifier="horarioInicial" type="java.util.Date" autocreate="true"  generate="true">
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+
+                    <attribute qualifier="horarioFinal" type="java.util.Date" autocreate="true"  generate="true">
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                </attributes>
+            </itemtype>
+            
+            
+            
+             <itemtype code="BafarLoyalty" autocreate="true" generate="true" extends="GenericItem">
+                <deployment table="BafarLoyalty" typecode="30527"/> 
+                <attributes>
+                    <attribute qualifier="code" type="java.lang.String" generate="true">
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" initial="false" optional="false"
+                                   unique="true"/>
+                    </attribute>
+                    <attribute qualifier="name" type="java.lang.String">
+                        <description>Loyalty Name</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="false" initial="true" unique="true"/>
+                    </attribute>
+                    
+                    
+                    <attribute qualifier="fecha" type="java.util.Date" autocreate="true"  generate="true">
+                        <persistence type="property">
+                            <columntype>
+                                <value>java.util.Date</value>
+                            </columntype>
+                        </persistence>
+                        <modifiers read="true" write="true" search="true" optional="false" initial="true"/>
+                    </attribute>
+                    
+                    <attribute qualifier="imagesloyalty" type="MediaLoyaltyList">
+                        <description>Imagenes Lealtad</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true" initial="false"/>
+                    </attribute>
+                     <attribute qualifier="youtubeloyalty" type="java.lang.String">
+                        <description>Video loyalty</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    
+                     <attribute qualifier="imagesloyaltyAlianza" type="MediaLoyaltyList">
+                        <description>Imagen Lealtad Alianza</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true" initial="false"/>
+                    </attribute>
+                     <attribute qualifier="youtubeloyaltyAlianza" type="java.lang.String">
+                        <description>Video loyalty Alianza</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    
+                     
+                      <attribute qualifier="imagesloyaltyPromotions" type="MediaLoyaltyList">
+                        <description>Imagenes Lealtad Promociones</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true" initial="false"/>
+                    </attribute>
+                    
+                    
+                     <attribute qualifier="catalogoloyalty" type="Media">
+                        <description>Catalogo loyalty</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="youtubelCatalogo" type="java.lang.String">
+                        <description>Video loyalty Alianza</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    
+                    
+                    
+                    
+                     <attribute qualifier="isActive" type="java.lang.Boolean">
+                     <defaultvalue>Boolean.FALSE</defaultvalue>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true" initial="true"/>
+                    </attribute>
+
+                </attributes>
+                <indexes>
+                    <index name="pk_bafarloyalty" unique="true">
+                        <key attribute="code" />
+                    </index>
+                </indexes>
+                   
+            </itemtype>
+
+            <!-- Inicio: Redencion de puntos-->
+
+            <itemtype code="RedemptionOfPoint" autocreate="true" generate="true" extends="GenericItem">
+                <description>Type to redemption point </description>
+                <deployment table="redemptionOfPoint" typecode="30531"/>
+                <attributes>
+
+
+                    <attribute qualifier="redemptionCode" type="java.lang.String">
+                        <description>ID Town</description>
+                        <persistence type="property"/>
+                        <modifiers optional="false" read="true" search="true" write="true" unique="true"
+                                   initial="true"/>
+                    </attribute>
+
+                    <attribute qualifier="initValidDate" type="java.util.Date">
+                        <description>Init Valid Date</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                    <attribute qualifier="endValidDate" type="java.util.Date">
+                        <description>End Valid Date</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+
+                    <attribute qualifier="reference" type="java.lang.String">
+                        <description>Reference</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="false" initial="true"/>
+                    </attribute>
+                    <attribute qualifier="idStore" type="java.lang.String">
+                        <description>ID Store</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+                </attributes>
+
+
+            </itemtype>
+
+
+
+            <itemtype code="RedemptionOfPointDetail" autocreate="true" generate="true">
+                <description>Type to redemption point </description>
+                <deployment table="redemptionOfPointDetail" typecode="30533"/>
+                <attributes>
+
+                    <attribute autocreate="true" qualifier="redemptionOfPoint" type="RedemptionOfPoint">
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="false" unique="true"
+                                   initial="true"/>
+                    </attribute>
+                    <attribute qualifier="posnr" type="java.lang.Integer">
+                        <description>Numero de posicion del documento comercial</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="false" unique="true"/>
+                    </attribute>
+
+                    <attribute qualifier="vkorg" type="java.lang.String">
+                        <description>Unidad Organizativa</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+
+                    <attribute qualifier="idTienda" type="java.lang.String">
+                        <description>Id Store</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="false"/>
+                    </attribute>
+
+                    <attribute qualifier="discountDescription" type="java.lang.String">
+                        <description>Descripcion de Descuento</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="true"/>
+                    </attribute>
+
+                    <attribute qualifier="discount" type="java.lang.String">
+                        <description>Descuento</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="false"/>
+                    </attribute>
+
+                    <attribute qualifier="amount" type="java.lang.String">
+                        <description>Total importe de condición maximo permitido</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="false"/>
+                    </attribute>
+
+                    <attribute qualifier="typeCurrency" type="java.lang.String">
+                        <description>Tipo de moneda</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="false"/>
+                    </attribute>
+
+                    <attribute qualifier="numberPoint" type="java.lang.String">
+                        <description>Cantidad de puntos</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="false"/>
+                    </attribute>
+
+                    <attribute qualifier="pointUnit" type="java.lang.String">
+                        <description>Unidad de medida de puntos</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="false"/>
+                    </attribute>
+                </attributes>
+                <indexes>
+                    <index name="RedemptionOfPoint_Detail">
+                        <key attribute="redemptionOfPoint"/>
+                    </index>
+                </indexes>
+            </itemtype>
+
+            <!-- Fin: Redencion de puntos-->
+	    
+	    
+	       <!-- Inicia recomendacion de productos  -->
+            <itemtype code="ProductCarouselComponent" generate="false" autocreate="false">
+                <attributes>
+                    <attribute qualifier="isTopN" type="java.lang.Boolean">
+                    <defaultvalue>Boolean.FALSE</defaultvalue>
+                        <persistence type="property"/>
+                        <modifiers optional="true"/>
+                    </attribute>                   
+                </attributes>
+            </itemtype>
+
+            <itemtype code="ProductReferencesComponent" generate="false" autocreate="false">
+                <attributes>
+                    <attribute qualifier="store" type="java.lang.String">
+                        <persistence type="property"/>
+                        <modifiers optional="true"/>
+                    </attribute>                   
+                </attributes>
+            </itemtype> 
+            
+              <itemtype code="ProductReference" generate="false" autocreate="false">
+                <attributes>
+                    <attribute qualifier="store" type="java.lang.String">
+                        <persistence type="property"/>
+                        <modifiers optional="true"/>
+                    </attribute>                   
+                </attributes>
+            </itemtype> 
+            
+            
+            <itemtype code="ProductCarouselTopN" autocreate="true" generate="true" extends="GenericItem">
+                <deployment table="ProductCarouselTopN" typecode="30535"/> 
+                <attributes>
+                    <attribute qualifier="code" type="java.lang.String" generate="true">
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" initial="false" optional="false"
+                                   unique="true"/>
+                    </attribute>               
+                    <attribute qualifier="isActive" type="java.lang.Boolean">
+                        <description>Is Active</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="false" initial="true" unique="false"/>
+                    </attribute>
+                      
+                   </attributes>   
+                   
+                    <indexes>
+                    <index name="pk_productcarouseltop" unique="true">
+                        <key attribute="code" />
+                    </index>
+                </indexes>           
+           </itemtype>
+                      
+            <itemtype code="ProductReferenceCross" autocreate="true" generate="true" extends="GenericItem">
+                <deployment table="ProductReferenceCross" typecode="30536"/> 
+                <attributes>
+                    <attribute qualifier="code" type="java.lang.String" generate="true">
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" initial="false" optional="false"
+                                   unique="true"/>
+                    </attribute>               
+                    <attribute qualifier="reference" type="java.lang.String">
+                        <description>Is Active</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="false" initial="true" unique="true"/>
+                    </attribute>
+                    
+                    <attribute qualifier="isActive" type="java.lang.Boolean">
+                        <description>Is Active</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="false" initial="true" unique="false"/>
+                    </attribute>
+                    
+                     <attribute qualifier="store" type="java.lang.String">
+                        <description>Is Active</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="false" initial="true" unique="true"/>
+                    </attribute>
+                      
+                   </attributes>   
+                   
+                    <indexes>
+                    <index name="pk_productreferencecross" unique="true">
+                        <key attribute="code" />
+                        <key attribute="reference" />
+                        <key attribute="store" />
+                    </index>
+                </indexes>           
+           </itemtype>
+           
+           
+            <itemtype code="ProductReferenceUp" autocreate="true" generate="true" extends="GenericItem">
+                <deployment table="ProductReferenceUp" typecode="30537"/> 
+                <attributes>
+                    <attribute qualifier="code" type="java.lang.String" generate="true">
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" initial="false" optional="false"
+                                   unique="true"/>
+                    </attribute>               
+                    <attribute qualifier="reference" type="java.lang.String">
+                        <description>Is Active</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="false" initial="true" unique="true"/>
+                    </attribute>
+                    
+                    <attribute qualifier="isActive" type="java.lang.Boolean">
+                        <description>Is Active</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="false" initial="true" unique="false"/>
+                    </attribute>
+                    
+                     <attribute qualifier="store" type="java.lang.String">
+                        <description>Is Active</description>
+                        <persistence type="property"/>
+                        <modifiers read="true" write="true" search="true" optional="false" initial="true" unique="true"/>
+                    </attribute>
+                      
+                   </attributes>   
+                   
+                    <indexes>
+                    <index name="pk_productreferenceupselling" unique="true">
+                        <key attribute="code" />
+                        <key attribute="reference" />
+                        <key attribute="store" />
+                    </index>
+                </indexes>           
+           </itemtype>
+           <!-- fin recomendacion de productos  -->
+           
+
+        </typegroup>
+        <!--Add attributes to Point Of Service type-->
+        <!-- TypeGroups are for structure of this file only -->
+
+        <typegroup name="Apparel">
+            <itemtype code="ApparelProduct" extends="Product"
+                      autocreate="true" generate="true"
+                      jaloclass="de.hybris.bafar.core.jalo.ApparelProduct">
+                <description>Base apparel product extension that contains additional attributes.</description>
+                <attributes>
+                    <attribute qualifier="genders" type="GenderList">
+                        <description>List of genders that the ApparelProduct is designed for</description>
+                        <modifiers/>
+                        <persistence type="property"/>
+                    </attribute>
+                </attributes>
+            </itemtype>
+
+            <itemtype code="ApparelStyleVariantProduct" extends="VariantProduct"
+                      autocreate="true" generate="true"
+                      jaloclass="de.hybris.bafar.core.jalo.ApparelStyleVariantProduct">
+                <description>Apparel style variant type that contains additional attribute describing variant style.
+                </description>
+                <attributes>
+                    <attribute qualifier="style" type="localized:java.lang.String"
+                               metatype="VariantAttributeDescriptor">
+                        <description>Color/Pattern of the product.</description>
+                        <modifiers/>
+                        <persistence type="property"/>
+                    </attribute>
+
+                    <attribute qualifier="swatchColors" type="SwatchColorSet">
+                        <description>A normalized color mapping to a standardized front-end navigable name.
+                        </description>
+                        <modifiers/>
+                        <persistence type="property"/>
+                    </attribute>
+                </attributes>
+
+            </itemtype>
+
+            <itemtype code="ApparelSizeVariantProduct" extends="ApparelStyleVariantProduct"
+                      autocreate="true" generate="true"
+                      jaloclass="de.hybris.bafar.core.jalo.ApparelSizeVariantProduct">
+                <description>Apparel size variant type that contains additional attribute describing variant size.
+                </description>
+                <attributes>
+                    <attribute qualifier="size" type="localized:java.lang.String"
+                               metatype="VariantAttributeDescriptor">
+                        <description>Size of the product.</description>
+                        <modifiers/>
+                        <persistence type="property"/>
+                    </attribute>
+                </attributes>
+            </itemtype>
+        </typegroup>
+
+        <typegroup name="Electronics">
+            <itemtype code="ElectronicsColorVariantProduct" extends="VariantProduct"
+                      autocreate="true" generate="true"
+                      jaloclass="de.hybris.bafar.core.jalo.ElectronicsColorVariantProduct">
+                <description>Electronics color variant type that contains additional attribute describing variant color.
+                </description>
+                <attributes>
+                    <attribute qualifier="color" type="localized:java.lang.String"
+                               metatype="VariantAttributeDescriptor">
+                        <description>Color of the product.</description>
+                        <modifiers/>
+                        <persistence type="property"/>
+                    </attribute>
+                </attributes>
+            </itemtype>
+        </typegroup>
+
+        <typegroup name="Bafar Components">
+            <itemtype code="SimpleBannerComponent" generate="false" autocreate="false">
+                <attributes>
+                    <attribute qualifier="additionalStyles" type="java.lang.String">
+                        <description>Additional class for styles.</description>
+                        <modifiers optional="true"/>
+                        <persistence type="property"/>
+                    </attribute>
+                </attributes>
+            </itemtype>
+
+            <itemtype code="BafarProductCarouselComponent" generate="true" autocreate="true" extends="ProductCarouselComponent"
+            jaloclass="de.hybris.bafar.core.jalo.BafarProductCarouselComponent">
+            </itemtype>
+        </typegroup>
+
+    </itemtypes>
+</items>
+
+
+
+
